@@ -1,0 +1,9 @@
+CREATE DATABASE IF NOT EXISTS auth_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS core_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS notif_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+CREATE USER IF NOT EXISTS 'barpro'@'%' IDENTIFIED BY 'barpro';
+GRANT ALL PRIVILEGES ON auth_db.* TO 'barpro'@'%';
+GRANT ALL PRIVILEGES ON core_db.* TO 'barpro'@'%';
+GRANT ALL PRIVILEGES ON notif_db.* TO 'barpro'@'%';
+FLUSH PRIVILEGES;

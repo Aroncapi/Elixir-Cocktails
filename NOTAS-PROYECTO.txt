@@ -1,0 +1,311 @@
+================================================================================
+PROYECTO: VELVET & GILT - Plataforma de servicios de mixologia para eventos
+          (nombre tecnico del repo: bar-events)
+Arquitectura: Microservicios (Spring Cloud) + Angular
+Ubicacion:    C:\Users\AROM\Projects\bar-events
+Nota maestra: LEER ESTA NOTA ANTES DE TOCAR CUALQUIER COSA
+Ultima actualizacion: 04/10/2026 (sesion 2 - Fase 0 en curso)
+================================================================================
+
+--------------------------------------------------------------------------------
+0. ESTADO ACTUAL - DONDE VAMOS (leer primero)
+--------------------------------------------------------------------------------
+
+FASE 0 (scaffolding) - PROGRESO:
+
+  [x] Repo git inicializado en C:\Users\AROM\Projects\bar-events (+ .gitignore)
+  [x] 5 servicios generados via start.spring.io REST (NO con el wizard de
+      IntelliJ, se generaron igual: type=maven-project, boot=4.1.1,
+      groupId=com.barpro, java=25)
+  [x] BOM spring-cloud 2025.1.2 + dependencias manuales en los 5 poms
+  [x] application.properties de cada servicio (puertos + nombres + datasource)
+  [x] docker-compose.yml con MySQL 8 + docker/mysql/init.sql
+      (crea auth_db, core_db, notif_db y el usuario barpro/barpro)
+  [x] MySQL corriendo y verificado: las 3 bases existen
+  [x] Maven 3.9.16 instalado en C:\Users\AROM\Tools\apache-maven-3.9.16
+      (agregado al PATH de usuario; winget NO tiene Apache.Maven)
+  [x] Angular CLI 22 instalado (npm i -g @angular/cli@22)
+  [x] LOS 5 SERVICIOS COMPILAN (mvn -DskipTests compile => EXIT 0)
+
+  [x] PENDIENTE #1 resuelto: @EnableEurekaServer agregado a
+      eureka-server/src/main/java/com/barpro/eureka/EurekaServerApplication.java
+      -> Eureka arriba en http://localhost:8761 (actuator/health = UP)
+  [x] Los 4 demas servicios arrancaron y se registraron en Eureka (sesion 2):
+        AUTH-SERVICE          :8081  UP
+        CORE-SERVICE          :8082  UP
+        NOTIFICATION-SERVICE  :8083  UP
+        GATEWAY-SERVICE       :8080  UP
+      (todos /actuator/health = OK, MySQL container healthy)
+      Para arrancarlos: cada uno en su propio proceso, ver bloque 5
+      Logs de arranque: *.log en la raiz (estan en .gitignore)
+  [ ] PENDIENTE: commit inicial del repo (pedir permiso al usuario)
+  [ ] PENDIENTE: frontend Angular (ng new frontend) -> fase 1
+
+  NOTA sesion 2: eureka-client NO dio el error de TransportClientFactories
+  en los otros 4 servicios (solo le pasaba al server). Si alguno lo diera:
+  eureka.client.jersey.enabled=false
+
+PENDIENTE #1 - EUREKA SERVER NO ARRANCA -> RESUELTO (sesion 2, fix aplicado)
+  Sintoma: mvn spring-boot:run falla con
+     "No qualifying bean of type
+      'com.netflix.discovery.shared.transport.jersey.TransportClientFactories'"
+  Causa raiz (confirmada con el reporte --debug de Spring):
+     la clase principal NO tiene @EnableEurekaServer.
+     Initializr solo genera @SpringBootApplication. Sin esa anotacion no se
+     crea EurekaServerMarkerConfiguration$Marker y por lo tanto no se activa
+     EurekaServerJerseyClientAutoConfiguration (que es la que publica los
+     beans de transporte HTTP de Eureka).
+  FIX: anotar la clase principal de eureka-server con @EnableEurekaServer.
+  Archivo: eureka-server/src/main/java/com/barpro/eureka/EurekaServerApplication.java
+  Despues re-ejecutar y verificar: http://localhost:8761/actuator/health
+
+  Contexto util si vuelve a fallar (diagnostico completo):
+  - Spring Cloud Netflix 5.0.2 tiene 3 transportes para EurekaClient:
+      Jersey   -> se activa si existe clase org.glassfish.jersey.client.JerseyClient
+                  (si: eureka-client-jersey3 la trae) y eureka.client.jersey.enabled
+                  no este en false
+      RestClient -> solo si jersey NO esta presente o eureka.client.jersey.enabled=false
+                    (clase org.springframework.web.client.RestClient, esta en spring-web)
+      WebClient  -> si hay clase WebClient (spring-webflux) y no este deshabilitado
+  - En nuestra app: jersey SI esta, asi que la rama RestClient queda bloqueada.
+  - Si un cliente (auth/core/notification/gateway) diera el mismo error,
+    probar primero: eureka.client.jersey.enabled=false  (fuerza la rama RestClient)
+    o agregar spring-boot-starter-restclient al pom.
+  - Diagnostico reproducible con:
+      mvn spring-boot:run "-Dspring-boot.run.arguments=--debug"
+
+--------------------------------------------------------------------------------
+1. CONFIGURACION BASE (YA USADA - no repetir)
+--------------------------------------------------------------------------------
+
+  Spring Boot:  4.1.1
+    OJO: el wizard de start.spring.io escribe "4.1.1.RELEASE" en el pom,
+    pero ESE artifacto NO existe en Maven Central (da 404).
+    Central tiene "4.1.1". Si el build falla con
+    "Non-resolvable parent POM", cambiar la version del parent a 4.1.1.
+    (YA CORREGIDO en los 5 poms)
+  Language:     Java
+  Type:         Maven
+  Group:        com.barpro
+  Java:         25
+  Packaging:    Jar
+
+  Servicios creados (ya existen, NO regenerar):
+    auth-service  com.barpro.auth         :8081
+    core-service  com.barpro.core         :8082
+    notification-service com.barpro.notification :8083
+    gateway-service com.barpro.gateway    :8080
+    eureka-server com.barpro.eureka       :8761
+
+  Frontend (NO creado aun): ng new frontend
+
+--------------------------------------------------------------------------------
+2. VERSIONES DEL STACK (verificadas octubre 2026)
+--------------------------------------------------------------------------------
+
+  Java               25.0.4.1 (instalado)
+  Spring Boot        4.1.1 (parent real en Central, no usar .RELEASE)
+  Spring Cloud       2025.1.2 (Oakwood) - compatible con Boot 4.1
+                     -> Spring Cloud Netflix 5.0.2, Gateway 5.0.2
+  Angular            22.x + Angular Material 22.2  (CLI 22 ya instalado)
+  Node.js            24.21 (instalado)
+  MySQL              8 (Docker, imagen mysql:8)
+  springdoc          3.1.1
+  Docker             29.8 (Docker Desktop instalado en
+                     C:\Users\AROM\AppData\Local\Programs\DockerDesktop
+                     - NO arranca solo, hay que abrirlo)
+  Git                2.53
+  Maven              3.9.16 en C:\Users\AROM\Tools\apache-maven-3.9.16\bin\mvn.cmd
+                     (no esta en el PATH de sesiones nuevas; usar la ruta completa
+                      o abrir terminal nueva despues del reinicio)
+
+--------------------------------------------------------------------------------
+3. DEPENDENCIAS POR SERVICIO (YA APLICADAS en los poms)
+--------------------------------------------------------------------------------
+
+[AUTH-SERVICE] spring-web, data-jpa, security, validation, mysql, flyway,
+               actuator, lombok + jjwt (api/impl/jackson 0.13.0),
+               eureka-client, springdoc 3.1.1
+
+[GATEWAY-SERVICE] actuator + spring-cloud-starter-gateway-server-webflux,
+               eureka-client, jjwt 0.13.0
+
+[CORE-SERVICE] spring-web, data-jpa, security, validation, mysql, flyway,
+               actuator, lombok + eureka-client, openfeign, springdoc 3.1.1,
+               openhtmltopdf-pdfbox 1.0.10
+
+[NOTIFICATION-SERVICE] spring-web, data-jpa, validation, mysql, flyway,
+               actuator, lombok + eureka-client, springdoc 3.1.1
+
+[EUREKA-SERVER] actuator + spring-cloud-starter-netflix-eureka-server
+
+--------------------------------------------------------------------------------
+4. DETALLES DE LOS POMs
+--------------------------------------------------------------------------------
+
+4.1 BOM DE SPRING CLOUD - esta en los 5 poms (tras </properties>):
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>2025.1.2</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+4.2 GATEWAY - RENOMBRE IMPORTANTE (Spring Cloud 2025.1.2 / Gateway 5.0.x):
+    el artifacto "spring-cloud-starter-gateway" ya NO existe y da error
+    "'version' ... is missing". El nombre nuevo (ya usado) es:
+        org.springframework.cloud:spring-cloud-starter-gateway-server-webflux
+    (la variante servlet seria ...-server-webmvc; el plan usa la reactiva)
+
+4.3 FLYWAY: el wizard de Boot 4.1 ya trae spring-boot-starter-flyway +
+    flyway-mysql automaticamente. La seccion "flyway-database-mysql" del plan
+    original NO hace falta; solo agregarla si aparece
+    "No database found to handle jdbc:mysql".
+
+--------------------------------------------------------------------------------
+5. COMANDOS UTILES (desde C:\Users\AROM\Projects\bar-events)
+--------------------------------------------------------------------------------
+
+  MySQL:
+      docker compose up -d          levanta MySQL
+      docker compose down           lo para
+      docker ps                     debe mostrar bar-events-mysql (healthy)
+      docker exec -it bar-events-mysql mysql -uroot -proot
+
+  Compilar un servicio:
+      C:\Users\AROM\Tools\apache-maven-3.9.16\bin\mvn.cmd -q -DskipTests compile -f auth-service\pom.xml
+
+  Arrancar un servicio:
+      C:\Users\AROM\Tools\apache-maven-3.9.16\bin\mvn.cmd spring-boot:run -f eureka-server\pom.xml
+      (o desde IntelliJ: Run en la clase main)
+
+  Credenciales DB (usuario barpro, creado por init.sql):
+      localhost:3306  auth_db / core_db / notif_db
+      usuario: barpro   password: barpro   root: root
+
+--------------------------------------------------------------------------------
+6. RECORDATORIOS IMPORTANTES
+--------------------------------------------------------------------------------
+
+- Spring Cloud (Gateway, Eureka, OpenFeign) NUNCA aparece en el wizard de
+  IntelliJ: el BOM + starters siempre se agregan manuales en el pom.
+- Herramientas ya instaladas en sesion 1: Maven 3.9.16, Angular CLI 22.
+- Frontend: npm i -g @angular/cli@22 && ng new frontend (fase 1, aun no se hace)
+- El usuario trabaja en IntelliJ; si no reconoce el proyecto:
+  File -> Open -> elegir la CARPETA bar-events (importa los 5 modulos Maven).
+- Wireframes del diseno: C:\Users\AROM\Downloads\stitch_velvet_gilt_event_platform
+  (13 pantallas code.html + screen.png + velvet_gilt\DESIGN.md)
+
+--------------------------------------------------------------------------------
+7. ARQUITECTURA RESUMEN
+--------------------------------------------------------------------------------
+
+  Angular 22 (HTTPS)
+        |
+        v
+  gateway :8080  (Spring Cloud Gateway + validacion JWT, unico puerto expuesto)
+        |
+        +--> auth-service :8081         (login, usuarios, roles, JWT)
+        +--> core-service :8082         (cocteles, tipos de evento, servicios/
+        |                                tiers, solicitudes #REQ, clientes,
+        |                                cotizador publico, desglose, PDF)
+        +--> notification-service :8083 (preview wa.me, log de notificaciones;
+                                         API WhatsApp oficial = fase 2)
+        |
+  eureka-server :8761 (descubrimiento de servicios)
+
+  MySQL 8 (Docker): auth_db | core_db | notif_db  (database-per-service)
+
+  JWT: auth-service emite (HS256, secreto compartido por variables de entorno),
+       gateway valida y propaga headers X-User-Email / X-User-Role.
+
+  Rutas publicas sin login (paso 3 del cotizador):
+    POST /api/public/solicitudes            (crea solicitud -> folio #REQ-xxx)
+    GET  /api/public/solicitudes/{token}    (link de seguimiento del cliente)
+
+  ENTIDADES PRINCIPALES (core-service):
+    Cocktail        nombre, categoria, ingredientes, imagen, activo,
+                    tipos de evento recomendados
+    EventType       Bodas, Corporativos, Fiestas Privadas, Masterclass, ...
+    ServiceTier     Servicio Base (horas + pax), Menu Premium,
+                    Personal adicional (bartenders)
+    Client          nombre, email, whatsapp, ubicacion, tier
+                    (VIP/Corporativo/Particular), gasto acumulado
+    Request         folio #REQ-xxx, cliente, tipo evento, fecha/hora,
+                    invitados, duracion, ubicacion, cocteles seleccionados,
+                    desglose (base + premium + personal), total,
+                    estado (PENDIENTE/CONFIRMADO/CANCELADO), token publico
+
+--------------------------------------------------------------------------------
+8. DECISIONES DEL PROYECTO
+--------------------------------------------------------------------------------
+
+- Arquitectura: Microservicios (practica/CV)
+- Base de datos: MySQL ahora -> PostgreSQL despues (Flyway desde el dia 1,
+  SQL portable sin ENUM, para migrar cambiando 1 dependencia)
+- WhatsApp fase 1: enlace wa.me gratis (mensaje pre-llenado con cliente,
+  tipo de evento, fecha, cocteles y total). Fase 2: WhatsApp Business Cloud
+  API de Meta (verificacion Business + template aprobado + metodo de pago;
+  Mexico ~0.0085 USD por mensaje utility; primeros 1000 service/mes gratis).
+- UI: seguir el DESIGN.md de los wireframes Velvet & Gilt
+  (fondo #0d141d, dorado #D4AF37, texto #dce3f0, Playfair Display + Inter,
+  esquinas rectas 0px, bordes dorados 1px, layouts split-screen)
+- El negocio NO tiene inventario: es servicio de mixologia preparado en el
+  evento (esto corrige una version vieja de esta nota)
+- Despliegue nube (fase 7): Railway (~5 USD/mes) o Render (free tier),
+  frontend en Vercel/Netlify gratis.
+
+--------------------------------------------------------------------------------
+9. FASES DEL PROYECTO
+--------------------------------------------------------------------------------
+
+  Fase 0  Repo git, docker-compose (MySQL), scaffolding de los 5 servicios
+          <<< EN CURSO - ver seccion 0 >>>
+  Fase 1  auth-service + gateway + JWT + Angular login/guards
+  Fase 2  Catalogo de cocteles (CRUD admin) + tipos de evento + servicios/tiers
+  Fase 3  Clientes (VIP/Corp/Particular, gasto acumulado)
+  Fase 4  Solicitudes: cotizador publico 3 pasos, estados, dashboard admin,
+          desglose financiero + calendario
+  Fase 5  Link publico por token + PDF descargable
+  Fase 6  notification-service (wa.me + interfaz NotificationSender)
+  Fase 7  Despliegue en la nube + URL publica para compartir links
+  Fase 8  Opcional: WhatsApp Cloud API, pagos Stripe, email
+
+  Orden logico: 0 y 1 son base obligatoria; despues el admin (2 y 3) alimenta
+  al cotizador publico (4), que genera las solicitudes que el PDF (5) y
+  WhatsApp (6) comparten con el cliente.
+
+--------------------------------------------------------------------------------
+10. EL NEGOCIO EN 30 SEGUNDOS (contexto para no perderse)
+--------------------------------------------------------------------------------
+
+  Velvet & Gilt vende SERVICIO DE MIXOLOGIA para eventos: bartender + cocteleria
+  de autor que se prepara EN el evento. NO vende botellas, NO hay inventario.
+
+  A) PUBLICO (sin login) - Cotizador 3 pasos:
+     Paso 1  Tipo de evento (Bodas, Corporativos, Fiestas Privadas,
+             Masterclass) + invitados + duracion -> estimacion en tiempo real
+     Paso 2  Catalogo de cocteles (busqueda + categorias: Signature,
+             Clasicos, Citricos, Sin Alcohol) -> "Carta del Evento"
+     Paso 3  Datos del cliente (nombre, WhatsApp, email, ubicacion,
+             notas/alergias) -> resumen + desglose -> confirmar por
+             WhatsApp o Email -> folio #REQ-042 + PDF descargable
+
+  B) ADMIN (con login) - Panel:
+     Dashboard        metricas, solicitudes recientes
+     Solicitudes      tabla con folio, cliente, tipo evento, fecha,
+                      invitados, monto, estado (PENDIENTE/CONFIRMADO)
+     Detalle          datos cliente + detalles evento + menu seleccionado
+                      + desglose financiero; cambiar estado, PDF, WhatsApp
+     Catalogo         CRUD de cocteles (nombre, categoria, ingredientes,
+                      foto, activo/inactivo, recomendado para eventos)
+     Clientes         cartera VIP / Corporativo / Particular, reservas,
+                      gasto acumulado
+     Configuracion
+================================================================================
