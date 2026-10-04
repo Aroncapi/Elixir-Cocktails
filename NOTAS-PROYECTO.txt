@@ -38,7 +38,9 @@ FASE 0 (scaffolding) - PROGRESO:
       (todos /actuator/health = OK, MySQL container healthy)
       Para arrancarlos: cada uno en su propio proceso, ver bloque 5
       Logs de arranque: *.log en la raiz (estan en .gitignore)
-  [ ] PENDIENTE: commit inicial del repo (pedir permiso al usuario)
+  [x] PENDIENTE: commit inicial del repo (HECHO sesion 2, rama main)
+      Remoto: https://github.com/Aroncapi/Elixir-Cocktails.git (origin)
+      Git config global: Aarom <aromcapilloramos@gmail.com>
   [ ] PENDIENTE: frontend Angular (ng new frontend) -> fase 1
 
   NOTA sesion 2: eureka-client NO dio el error de TransportClientFactories
