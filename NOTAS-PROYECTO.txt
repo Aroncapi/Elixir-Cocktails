@@ -4,8 +4,9 @@ PROYECTO: VELVET & GILT - Plataforma de servicios de mixologia para eventos
 Arquitectura: Microservicios (Spring Cloud) + Angular
 Ubicacion:    C:\Users\AROM\Projects\bar-events
 Nota maestra: LEER ESTA NOTA ANTES DE TOCAR CUALQUIER COSA
-Ultima actualizacion: 04/10/2026 - SESION 3 CERRADA (servicios, contacto,
-login+guard, panel admin). SIGUIENTE: leer bloque 0.4 HANDOFF (sesion 4)
+Ultima actualizacion: 05/10/2026 - SESION 4 CERRADA (commit+push de los 111
+archivos, FASE 3 CLIENTES completa: backend + pantalla /panel/clientes).
+SIGUIENTE: leer bloque 0.4 HANDOFF (sesion 5) y bloque 0.5 (detalle fase 3)
 ================================================================================
 
 --------------------------------------------------------------------------------
@@ -141,7 +142,8 @@ FASE 0 (scaffolding) - PROGRESO:
       event-types 4, cocktails 8, filtro category, busqueda, 401 sin token,
       200 con token, POST 201, duplicado 409, DELETE soft, public lista OK
 
-  [ ] PENDIENTE fase 3: Client (VIP/Corporativo/Particular, gasto acumulado)
+  [x] PENDIENTE fase 3: Client (VIP/Corporativo/Particular, gasto acumulado)
+      -> RESUELTO en la sesion 4 (ver bloque 0.5)
   [ ] PENDIENTE: notification-service
 
   [x] UI admin del catalogo HECHA en la sesion 3 (ver detalle en bloque 0.3)
@@ -210,8 +212,9 @@ FASE 0 (scaffolding) - PROGRESO:
         DELETE soft 200. DB restaurada a los 8 seeds (borre los residuos
         de los tests de las sesiones 2 y 3)
 
+  [x] features/admin/clients-admin (sesion 4, ver bloque 0.5)
   [ ] PENDIENTE: demas wireframes (cotizador 3 pasos, confirmacion,
-      dashboard panel, detalle solicitud, clientes)
+      dashboard panel, detalle solicitud)  <- clientes ya NO falta
 
   [x] Verificado al final de la sesion 3: ng build OK (sin warnings),
       ng serve :4200 sirve todo (bundle contiene servicios, contacto,
@@ -250,10 +253,18 @@ PENDIENTE #1 - EUREKA SERVER NO ARRANCA -> RESUELTO (sesion 2, fix aplicado)
       mvn spring-boot:run "-Dspring-boot.run.arguments=--debug"
 
 --------------------------------------------------------------------------------
-0.4 HANDOFF - COMO CONTINUAR LA SESION 4 (LEER PRIMERO)
+0.4 HANDOFF - COMO CONTINUAR LA SESION 5 (LEER PRIMERO)
 --------------------------------------------------------------------------------
 
-QUE SE HIZO EN LA SESION 3 (frontend, todo en local, NADA commiteado):
+QUE SE HIZO EN LA SESION 4 (backend + frontend de clientes, todo commiteado):
+  - Commit f93af3b con los 111 archivos pendientes + push a origin/main
+  - FASE 3 CERRADA: backend Client en core-service (V5/V6) + pantalla
+    /panel/clientes -> ver detalle completo en el bloque 0.5
+  - Sidebar del panel: links reales Catalogo <-> Clientes (RouterLink) y
+    h2/p corregidos a "Velvet & Gilt" / "Admin Panel"
+  - Todo verificado end-to-end (:8080 y proxy :4200) y DB con los 3 seeds
+
+QUE SE HIZO EN LA SESION 3 (frontend):
   - Auditoria de esta nota: 6 errores corregidos (Angular Material nunca se
     instalo, "13 pantallas" eran 12, roles reales ADMIN/STAFF, colores,
     AUTO_INCREMENT, endpoints/archivos pendientes marcados)
@@ -263,16 +274,16 @@ QUE SE HIZO EN LA SESION 3 (frontend, todo en local, NADA commiteado):
   - angular.json: anyComponentStyle en 16kB warn / 32kB error
   - DB restaurada a los 8 seeds de cocteles (borre residuos de tests)
 
-GIT - OJO (importante):
-  - Ultimo commit: cf5f9c8 (en el remoto solo esta Fase 0 + nota antigua).
-  - Hay 111 archivos SIN COMMIT (106 nuevos + 5 modificados): backend de
-    auth/core/gateway, el frontend completo y esta nota.
-    El usuario pidio no commitear (sesion 2) y el tema no se retomo
-    -> PREGUNTAR antes de hacer commit.
+GIT - OJO (actualizado sesion 4):
+  - ULTIMO COMMIT: f93af3b "Fase 1-2: auth+JWT, catalogo, gateway y frontend
+    Angular" (111 archivos) y YA ESTA EN EL REMOTO (push hecho: cf5f9c8..f93af3b).
+  - El arbol esta LIMPIO. Commitear/pushear ahora SI esta permitido (el bloqueo
+    era de la sesion 2); aun asi, preguntar antes de hacer push si no lo piden.
   - Ver: git status -uall   |   git log --oneline
 
-PROCESOS (al cerrar la sesion 3 estaban los 7 arriba: 3306, 4200, 8080-8083
-y 8761; si faltan, levantar en este orden):
+PROCESOS (al cerrar la sesion 4 estaban arriba: 3306, 4200, 8080-8082, 8761
+(notification-service NO estaba; solo hace falta en la fase 6; si faltan,
+ levantar en este orden):
   MySQL      docker compose up -d                                    (healthy)
   Eureka     mvn.cmd spring-boot:run -f eureka-server\pom.xml        :8761
   Auth       mvn.cmd spring-boot:run -f auth-service\pom.xml         :8081
@@ -289,39 +300,44 @@ CREDENCIALES DE PRUEBA:
 
 COMO VERIFICAR QUE TODO VIVE (PowerShell, 30 segundos):
   ruta:  Invoke-WebRequest http://localhost:4200/panel -UseBasicParsing
+  rutas: /panel  y  /panel/clientes  (ambas deben dar 200)
   login: $t=(Invoke-RestMethod -Method Post -Uri http://localhost:4200/api/auth/login
          -ContentType 'application/json'
          -Body '{"email":"admin@velvetgilt.com","password":"admin123"}').token
   admin: Invoke-RestMethod http://localhost:4200/api/cocktails -Headers @{Authorization="Bearer $t"}
          (sin token debe dar 401)
+  clientes: Invoke-RestMethod http://localhost:4200/api/clients -Headers @{Authorization="Bearer $t"}
+         (debe devolver 3: Elena/Arch/David)
   build: cd frontend && ng build   (debe salir SIN warnings)
 
 ESTADO DEL FRONTEND (estructura ya creada, seguirla):
   frontend/src/app/
     app.ts|html|css    nav publica; se OCULTA dentro de /panel (enPanel())
     app.routes.ts      '' Home | /catalogo | /servicios | /contacto | /login
-                       | /panel (CatalogAdmin + canActivate) 
+                       | /panel (CatalogAdmin + canActivate)
+                       | /panel/clientes (ClientsAdmin + canActivate)
                        | /cotizador (Placeholder, el unico que queda)
     app.config.ts      provideHttpClient(withInterceptors([authInterceptor]))
     core/services/     catalog.ts (publico), auth.ts (sesion, signals,
                        localStorage velvet_token/velvet_usuario),
-                       admin-catalog.ts (CRUD /api/cocktails + event-types)
+                       admin-catalog.ts (CRUD /api/cocktails + event-types),
+                       admin-clients.ts (CRUD /api/clients)
     core/guards/auth.guard.ts              redirige a /login si no hay token
     core/interceptors/auth.interceptor.ts  agrega Authorization: Bearer
-    core/models/       cocktail.ts, usuario.ts
-    features/          home, catalog, services, contact, login, admin/catalog-admin,
-                       placeholder (solo queda /cotizador)
+    core/models/       cocktail.ts, usuario.ts, client.ts (Cliente)
+    features/          home, catalog, services, contact, login,
+                       admin/catalog-admin (/panel), admin/clients-admin
+                       (/panel/clientes), placeholder (solo queda /cotizador)
   PATRONES A SEGUIR: archivos sin ".component" (services.ts/services.html),
   clases en ingles (Home, Services, Contact, Login, CatalogAdmin),
   @if / @for (no *ngIf/*ngFor), signals + inject(), FormsModule + ngModel
   en formularios, CSS por componente con los tokens de styles.css.
 
 SIGUIENTE PASO - DECISION PENDIENTE DEL USUARIO (preguntar al arrancar):
-  a) Fase 3: Client en core-service (migracion V5 + endpoints + pantalla
-     gesti_n_de_clientes_admin_panel)  <- recomendado
-  b) Fase 4: cotizador 3 pasos (wireframes paso_1/2/3 + confirmacion +
-     backend de solicitudes con folio #REQ-xxx)
-  (el orden logico de la seccion 9 es terminar el admin antes del cotizador)
+  a) Fase 4: cotizador 3 pasos (wireframes paso_1/2/3 + confirmacion +
+     backend de solicitudes con folio #REQ-xxx, desglose y dashboard admin)
+     <- ahora es lo recomendado: el admin (fases 2 y 3) ya quedo completo
+  b) Fase 5: link publico por token + PDF  (o Fase 6: notification-service)
 
 METODO PARA REPRODUCIR UNA PANTALLA WIREFRAME (ya usado 4 veces):
   1. Leer <pantalla>\screen.png  -> ver el diseno
@@ -354,10 +370,69 @@ DETALLES QUE SUELEN TRABAR (descubiertos en la sesion 3):
 
 PENDIENTES DE BACKEND AUN:
   - notification-service: VACIO (solo scaffolding)
-  - core-service: sin Client (fase 3) ni Request/solicitudes (fase 4)
+  - core-service: sin Request/solicitudes (fase 4)
   - service_tiers.price en NULL: definir precios en la fase 4
   - No hay tests unitarios escritos en ningun servicio
   - La carpeta NO se renombro a Elixir-Cocktails (bloqueada; quedo bar-events)
+
+--------------------------------------------------------------------------------
+0.5 FASE 3 (clientes) - COMPLETA (backend + UI, sesion 4)
+--------------------------------------------------------------------------------
+
+  [x] core-service - backend:
+      - Flyway V5__create_clients.sql: tabla clients (name, email UNICO y
+        nullable, whatsapp, location, tier, total_spent, reservations,
+        last_event, active, created_at). PK BIGINT AUTO_INCREMENT (MySQL).
+      - V6__seed_clients.sql: 3 clientes demo que calcan las filas del
+        wireframe (Elena Rostova VIP 12 reservas $45,200 | Arch & Co.
+        CORPORATIVO 4 / $18,500 | David Sterling PARTICULAR inactivo)
+      - Enum ClientTier: VIP / CORPORATIVO / PARTICUAR -> VIP / CORPORATIVO /
+        PARTICULAR (mismos textos que muestra el UI)
+      - Entidad Client, DTOs ClientRequest/ClientResponse, ClientRepository,
+        ClientService (busqueda por nombre/correo/ubicacion/ultimo evento +
+        filtro por tier, 409 si el correo ya existe, tier invalido -> 400)
+      - ClientAdminController en /api/clients con @PreAuthorize ADMIN:
+          GET    /api/clients?search=&tier=
+          POST   /api/clients        (201)
+          PUT    /api/clients/{id}
+          DELETE /api/clients/{id}   (desactivacion suave, nunca borra)
+        (la ruta 50 /api/** del gateway ya lo lleva a core-service: sin tocar
+         el gateway ni el gateway-service properties)
+  [x] frontend - features/admin/clients-admin (wireframe
+      gesti_n_de_clientes_admin_panel):
+      - sidebar con "Clientes" activo y links reales: Catalogo <-> /panel,
+        Clientes -> /panel/clientes (RouterLink en AMBOS componentes; ademas
+        se corrigio el h2/p del sidebar del catalogo a "Velvet & Gilt" /
+        "Admin Panel" como dice el code.html)
+      - buscador superior "Buscar cliente, evento o correo..." + iconos
+        notifications/help
+      - encabezado "Gestion de Clientes" + subtitulo + segmentos
+        Todos/VIP/Corporativo/Particular (botones, no select)
+      - tabla: Cliente (inicial + correo), Tipo (badge VIP dorado, resto
+        gris), Ultimo Evento, Reservas, Gasto Acumulado (Intl es-MX MXN),
+        Estado (punto dorado = Activo / gris = Inactivo), Acciones
+        "Ver Detalles"; paginacion de 10 en 10 ("Mostrando X a Y de N")
+      - modal Detalle: resumen (inicial grande, tier, gasto, reservas,
+        ultimo evento, estado) + formulario editable (nombre, correo,
+        whatsapp, ubicacion, tier, gasto, cliente activo) + Desactivar /
+        Cancelar / Guardar
+      - ruta /panel/clientes con canActivate (authGuard); app.ts ya oculta
+        la barra publica con startsWith('/panel')
+      - NO hay boton "Agregar Nuevo" porque el wireframe no lo trae (los
+        clientes nacen del cotizador en la fase 4); el POST existe igual
+        en el backend
+  [x] Verificado en la sesion 4 (por :8080 y por el proxy :4200):
+        login 200 | GET /api/clients = 3 (seeds) | sin token 401 |
+        POST 201 | POST duplicado 409 | PUT 200 (tier/gasto ok) |
+        ?tier=VIP 1 y ?tier=CORPORATIVO 2 | ?search=prueba 1 |
+        DELETE soft 200 (active=false) | id inexistente 404 |
+        /panel/clientes 200 | Flyway aplico V5 y V6 (core_db en v6) |
+        ng build sin warnings
+  [x] DB restaurada a los 3 seeds (borre el cliente de prueba id=4)
+
+  NOTA: reservations / last_event / total_spent hoy son de solo lectura en la
+  UI; los actualiza la Fase 4 cuando se confirman solicitudes.
+
 
 --------------------------------------------------------------------------------
 1. CONFIGURACION BASE (YA USADA - no repetir)
@@ -537,6 +612,7 @@ PENDIENTES DE BACKEND AUN:
     GET/POST/PUT/DELETE /api/users  solo ADMIN     (roles: ADMIN / STAFF)
     GET  /api/public/cocktails|event-types|service-tiers   publico
     GET/POST/PUT/DELETE /api/cocktails|event-types|service-tiers  solo ADMIN
+    GET/POST/PUT/DELETE /api/clients  solo ADMIN  (?search=&tier= en el GET)
     (GET a las rutas admin requieren header X-User-Role: ADMIN del gateway)
 
   PENDIENTES (no existen aun; son fases 4 y 5):
@@ -550,7 +626,8 @@ PENDIENTES DE BACKEND AUN:
     ServiceTier     Servicio Base (horas + pax), Menu Premium,
                     Personal adicional                  [OK, price en NULL]
     Client          nombre, email, whatsapp, ubicacion, tier
-                    (VIP/Corporativo/Particular), gasto acumulado   [PENDIENTE]
+                    (VIP/Corporativo/Particular), gasto acumulado
+                    + reservations / last_event (los llena la fase 4)  [OK]
     Request         folio #REQ-xxx, cliente, tipo evento, fecha/hora,
                     invitados, duracion, ubicacion, cocteles seleccionados,
                     desglose (base + premium + personal), total,
@@ -594,7 +671,7 @@ PENDIENTES DE BACKEND AUN:
   Fase 2  Catalogo de cocteles (CRUD admin) + tipos de evento + servicios/tiers
           [HECHA completa: backend + UI admin del catalogo]
   Fase 3  Clientes (VIP/Corp/Particular, gasto acumulado)
-          [SIN EMPEZAR]
+          [HECHA completa: backend V5/V6 + UI /panel/clientes, sesion 4]
   Fase 4  Solicitudes: cotizador publico 3 pasos, estados, dashboard admin,
           desglose financiero + calendario
           [SIN EMPEZAR - la pantalla de inicio y placeholders ya existen]

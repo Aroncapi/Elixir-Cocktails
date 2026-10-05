@@ -1,0 +1,286 @@
+<div class="panel">
+  <!-- Barra lateral -->
+  <aside class="lateral" [class.abierto]="menuAbierto()">
+    <div class="lateral-cabecera">
+      <div class="avatar">
+        <img
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuBuXbaj93r6GZ0UQGFUfDd7Mj9zj7sQcU0e2le76JSvQpjMZVWp36-CtosvVMb1Zz4SXJVJDWwMDopB8Zc2CMc-6ntcGY8BsPaHFvk0aq_GjqMn0PcbsOdEvHA8QjRnHs3QkYRFKmTL5hNJ2w8oweDi2PNKvzdKJsPTPe2vKGgUqX7gIwJABnE-F621IS5NIz7OxekPphnBftX_VwkmM0nLjylzX0NWAY0mJvCl9JqBCbG_KukJNC8G"
+          alt="Perfil admin"
+        />
+      </div>
+      <h2>Velvet &amp; Gilt</h2>
+      <p>Admin Panel</p>
+    </div>
+
+    <ul class="lateral-menu">
+      <li><span class="item inactivo"><span class="material-symbols-outlined">dashboard</span>Dashboard</span></li>
+      <li><span class="item inactivo"><span class="material-symbols-outlined">description</span>Solicitudes</span></li>
+      <li><a class="item activo" routerLink="/panel/clientes"><span class="material-symbols-outlined">group</span>Clientes</a></li>
+      <li><a class="item inactivo" routerLink="/panel"><span class="material-symbols-outlined">menu_book</span>Catálogo</a></li>
+      <li><span class="item inactivo"><span class="material-symbols-outlined">settings</span>Configuración</span></li>
+    </ul>
+
+    <div class="lateral-pie">
+      <button class="nueva-reserva" type="button" disabled title="Disponible en la Fase 4">
+        Nueva Reserva
+      </button>
+      <button class="salir" type="button" (click)="cerrarSesion()">
+        <span class="material-symbols-outlined">logout</span>Cerrar Sesión
+      </button>
+    </div>
+  </aside>
+
+  @if (menuAbierto()) {
+    <div class="velo-menu" (click)="alternarMenu()"></div>
+  }
+
+  <!-- Cabecera superior -->
+  <header class="superior">
+    <div class="buscador">
+      <span class="material-symbols-outlined">search</span>
+      <input
+        type="text"
+        placeholder="Buscar cliente, evento o correo..."
+        [ngModel]="busqueda()"
+        (ngModelChange)="cambiarBusqueda($event)"
+      />
+    </div>
+
+    <div class="superior-derecha">
+      <span class="icono-decorativo" aria-hidden="true">
+        <span class="material-symbols-outlined">notifications</span>
+      </span>
+      <span class="icono-decorativo" aria-hidden="true">
+        <span class="material-symbols-outlined">help</span>
+      </span>
+      <button class="boton-menu" type="button" (click)="alternarMenu()" aria-label="Menú">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Contenido -->
+  <main class="contenido">
+    <div class="encabezado">
+      <div class="encabezado-texto">
+        <h1>Gestión de Clientes</h1>
+        <p>Visualiza y administra la cartera de clientes VIP y corporativos.</p>
+      </div>
+
+      <div class="segmentos">
+        @for (t of tiers; track t) {
+          <button
+            type="button"
+            [class.activo]="tierFiltro() === t"
+            (click)="filtrarPorTier(t)"
+          >
+            {{ t === '' ? 'Todos' : etiquetaTier(t) }}
+          </button>
+        }
+      </div>
+    </div>
+
+    @if (cargando()) {
+      <p class="estado">Cargando clientes...</p>
+    }
+
+    @if (error()) {
+      <p class="estado error">{{ error() }}</p>
+    }
+
+    @if (!cargando() && !error()) {
+      <section class="tabla-tarjeta">
+        <div class="tabla-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Tipo</th>
+                <th>Último Evento</th>
+                <th class="derecha">Reservas</th>
+                <th class="derecha">Gasto Acumulado</th>
+                <th class="centro">Estado</th>
+                <th class="derecha">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (c of paginaClientes(); track c.id) {
+                <tr>
+                  <td class="celda-cliente">
+                    <span class="inicial">{{ iniciales(c.name) }}</span>
+                    <span class="datos">
+                      <span class="nombre">{{ c.name }}</span>
+                      <span class="correo">{{ c.email ?? 'Sin correo' }}</span>
+                    </span>
+                  </td>
+                  <td>
+                    <span class="tipo" [class.vip]="c.tier === 'VIP'">
+                      {{ etiquetaTier(c.tier) }}
+                    </span>
+                  </td>
+                  <td class="texto">{{ c.lastEvent ?? '—' }}</td>
+                  <td class="numero">{{ c.reservations }}</td>
+                  <td class="numero">{{ dinero(c.totalSpent) }}</td>
+                  <td class="centro">
+                    <span class="estado-fila" [class.inactivo]="!c.active">
+                      <i></i>{{ c.active ? 'Activo' : 'Inactivo' }}
+                    </span>
+                  </td>
+                  <td class="derecha">
+                    <button class="ver-detalles" type="button" (click)="abrirDetalles(c)">
+                      Ver Detalles
+                    </button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td class="estado" colspan="7">No hay clientes que coincidan.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <footer class="paginacion">
+          <span>
+            Mostrando {{ desde() }} a {{ hasta() }} de {{ visibles().length }} cliente(s)
+          </span>
+          <div class="paginacion-botones">
+            <button
+              type="button"
+              (click)="irAPagina(pagina() - 1)"
+              [disabled]="pagina() === 1"
+              aria-label="Página anterior"
+            >
+              <span class="material-symbols-outlined">chevron_left</span>
+            </button>
+            <button
+              type="button"
+              (click)="irAPagina(pagina() + 1)"
+              [disabled]="pagina() === totalPaginas()"
+              aria-label="Página siguiente"
+            >
+              <span class="material-symbols-outlined">chevron_right</span>
+            </button>
+          </div>
+        </footer>
+      </section>
+    }
+  </main>
+</div>
+
+<!-- Modal detalle / edición -->
+@if (modalAbierto()) {
+  <div class="modal">
+    <div class="modal-fondo" (click)="cerrarModal()"></div>
+
+    <div class="modal-caja" role="dialog" aria-modal="true">
+      <div class="modal-cabecera">
+        <div>
+          <h2>Detalle del Cliente</h2>
+          <p>Revisa y actualiza la información del cliente de Velvet &amp; Gilt.</p>
+        </div>
+        <button class="cerrar" type="button" (click)="cerrarModal()" aria-label="Cerrar">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <div class="modal-cuerpo">
+        <aside class="resumen">
+          <span class="inicial grande">{{ iniciales(formulario.name) }}</span>
+          <span class="tipo" [class.vip]="formulario.tier === 'VIP'">
+            {{ etiquetaTier(formulario.tier) }}
+          </span>
+          <h3>{{ formulario.name || 'Sin nombre' }}</h3>
+
+          <ul class="metricas">
+            <li>
+              <span>Gasto acumulado</span>
+              <strong>{{ dinero(formulario.totalSpent ?? 0) }}</strong>
+            </li>
+            <li>
+              <span>Reservas</span>
+              <strong>{{ seleccionado()?.reservations ?? 0 }}</strong>
+            </li>
+            <li>
+              <span>Último evento</span>
+              <strong>{{ seleccionado()?.lastEvent ?? 'Sin eventos' }}</strong>
+            </li>
+            <li>
+              <span>Estado</span>
+              <strong>{{ formulario.active ? 'Activo' : 'Inactivo' }}</strong>
+            </li>
+          </ul>
+        </aside>
+
+        <div class="zona-formulario">
+          <div class="campo">
+            <label for="cl-nombre">Nombre *</label>
+            <input id="cl-nombre" type="text" placeholder="Ej. Elena Rostova" [(ngModel)]="formulario.name" />
+          </div>
+
+          <div class="campo">
+            <label for="cl-correo">Correo electrónico</label>
+            <input id="cl-correo" type="email" placeholder="cliente@ejemplo.com" [(ngModel)]="formulario.email" />
+          </div>
+
+          <div class="campo">
+            <label for="cl-whatsapp">WhatsApp</label>
+            <input id="cl-whatsapp" type="tel" placeholder="+52 55 0000 0000" [(ngModel)]="formulario.whatsapp" />
+          </div>
+
+          <div class="campo">
+            <label for="cl-ubicacion">Ubicación</label>
+            <input id="cl-ubicacion" type="text" placeholder="Ciudad de Mexico" [(ngModel)]="formulario.location" />
+          </div>
+
+          <div class="campo">
+            <label for="cl-tier">Tipo de cliente</label>
+            <div class="select">
+              <select id="cl-tier" [(ngModel)]="formulario.tier">
+                <option value="VIP">VIP</option>
+                <option value="CORPORATIVO">Corporativo</option>
+                <option value="PARTICULAR">Particular</option>
+              </select>
+              <span class="material-symbols-outlined flecha">expand_more</span>
+            </div>
+          </div>
+
+          <div class="campo">
+            <label for="cl-gasto">Gasto acumulado (MXN)</label>
+            <input id="cl-gasto" type="number" min="0" step="0.01" [(ngModel)]="formulario.totalSpent" />
+          </div>
+
+          <div class="campo">
+            <label>Estado</label>
+            <label class="casilla">
+              <input type="checkbox" [(ngModel)]="formulario.active" />
+              <span>Cliente activo</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      @if (errorModal()) {
+        <p class="modal-error" role="alert">{{ errorModal() }}</p>
+      }
+
+      <div class="modal-pie">
+        <button
+          class="btn-peligro"
+          type="button"
+          (click)="desactivar(seleccionado()!)"
+          [class.oculto]="!formulario.active"
+        >
+          Desactivar
+        </button>
+        <div class="pie-derecha">
+          <button class="btn-secundario" type="button" (click)="cerrarModal()">Cancelar</button>
+          <button class="btn-guardar" type="button" (click)="guardar()" [disabled]="guardando()">
+            {{ guardando() ? 'Guardando…' : 'Guardar Cambios' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

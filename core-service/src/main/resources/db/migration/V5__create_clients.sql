@@ -1,0 +1,14 @@
+CREATE TABLE clients (
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(120) NOT NULL,
+    email VARCHAR(150),
+    whatsapp VARCHAR(30),
+    location VARCHAR(200),
+    tier VARCHAR(20) NOT NULL DEFAULT 'PARTICULAR',
+    total_spent DECIMAL(12,2) NOT NULL DEFAULT 0,
+    reservations INT NOT NULL DEFAULT 0,
+    last_event VARCHAR(150),
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uq_clients_email UNIQUE (email)
+);

@@ -1,6 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Cocktail } from '../../core/models/cocktail';
 import { AdminCatalogService, CocktailPayload, EventTypeAdmin } from '../../core/services/admin-catalog';
 import { AuthService } from '../../core/services/auth';
@@ -13,7 +13,7 @@ const ETIQUETAS_CATEGORIA: Record<string, string> = {
 };
 
 @Component({
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink],
   selector: 'app-catalog-admin',
   styleUrl: './catalog-admin.css',
   templateUrl: './catalog-admin.html',

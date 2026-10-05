@@ -5,6 +5,7 @@ import { Services } from './features/services/services';
 import { Contact } from './features/contact/contact';
 import { Login } from './features/login/login';
 import { CatalogAdmin } from './features/admin/catalog-admin';
+import { ClientsAdmin } from './features/admin/clients-admin';
 import { Placeholder } from './features/placeholder/placeholder';
 import { authGuard } from './core/guards/auth.guard';
 
@@ -17,6 +18,11 @@ export const routes: Routes = [
   {
     path: 'panel',
     component: CatalogAdmin,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'panel/clientes',
+    component: ClientsAdmin,
     canActivate: [authGuard],
   },
   { path: 'cotizador', component: Placeholder, data: { titulo: 'Cotizador' } },
