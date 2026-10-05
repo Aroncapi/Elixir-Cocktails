@@ -1,0 +1,56 @@
+<section class="login">
+  <div class="fondo" aria-hidden="true"></div>
+
+  <div class="tarjeta">
+    <div class="marca-letra">Velvet &amp; Gilt</div>
+
+    <h1>Bienvenido de vuelta</h1>
+    <p class="subtitulo">
+      Ingresa para administrar eventos, catálogo y solicitudes.
+    </p>
+
+    <form class="formulario" (ngSubmit)="iniciarSesion()">
+      <div class="campo">
+        <label for="email">Correo electrónico</label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          autocomplete="username"
+          placeholder="admin@velvetgilt.com"
+          [(ngModel)]="email"
+          required
+        />
+      </div>
+
+      <div class="campo">
+        <label for="password">Contraseña</label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          placeholder="••••••••"
+          [(ngModel)]="password"
+          required
+        />
+      </div>
+
+      @if (error()) {
+        <p class="error" role="alert">{{ error() }}</p>
+      }
+
+      <button class="btn btn-primario enviar" type="submit" [disabled]="cargando()">
+        {{ cargando() ? 'Ingresando…' : 'Iniciar sesión' }}
+      </button>
+    </form>
+
+    <p class="ayuda">
+      Cuenta demo: <span>admin@velvetgilt.com</span> / <span>admin123</span>
+    </p>
+
+    <p class="volver">
+      <a routerLink="/">Volver al inicio</a>
+    </p>
+  </div>
+</section>

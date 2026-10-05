@@ -1,0 +1,31 @@
+<section class="carta">
+  <h1>Carta del Evento</h1>
+
+  <!-- @if = *ngIf ; @for = *ngFor (asi se escriben en Angular 22) -->
+  @if (cargando()) {
+    <p class="estado">Cargando carta...</p>
+  }
+
+  @if (error()) {
+    <p class="estado error">{{ error() }}</p>
+  }
+
+  @if (!cargando() && !error()) {
+    <p class="contador">{{ cocktails().length }} cocteles disponibles</p>
+
+    <ul class="grid">
+      @for (c of cocktails(); track c.id) {
+        <li class="carta-item">
+          <div class="encabezado">
+            <h2>{{ c.name }}</h2>
+            <span class="categoria">{{ c.category }}</span>
+          </div>
+          <p class="ingredientes">{{ c.ingredients }}</p>
+          <small>Recomendado para {{ c.eventTypes.length }} tipo(s) de evento</small>
+        </li>
+      } @empty {
+        <li class="estado">No hay cocteles registrados.</li>
+      }
+    </ul>
+  }
+</section>

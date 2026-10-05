@@ -1,0 +1,149 @@
+/* Login: sin wireframe propio, misma estética de los paneles glass */
+.login {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 80px);
+  margin-top: 80px;
+  padding: 48px 20px;
+  overflow: hidden;
+}
+
+.fondo {
+  position: absolute;
+  inset: 0;
+  background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDar3lBCIF1_nmxmUfTrKCgqeA8pOUPYx_IyHvUMGL6RJvwwLtR5HdOSMclspbUnWZrKF88aaIpH9CMrWVTVg6EwkrlIVn4jQcBkIqlfZrgus4exK3kEIla_T-4NOsezBR73LEaBB5X7L5LW7el1iRPgLqYlUVdgz0sxlDBWamSjB3fwafI03Ix_S2P_zJZ6DyXwwCzQ95tGt_yWAMP5EHmv3xOO-xP_swZUDwL1GGxgzW6RccKcs0v');
+  background-size: cover;
+  background-position: center;
+}
+
+.fondo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 15, 15, 0.85);
+}
+
+.tarjeta {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 440px;
+  padding: 40px;
+  background: rgba(26, 26, 26, 0.85);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(212, 175, 55, 0.4);
+}
+
+.marca-letra {
+  margin-bottom: 24px;
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #e9c349;
+}
+
+.login h1 {
+  margin: 0 0 8px;
+  font-size: clamp(30px, 6vw, 40px);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--texto);
+}
+
+.subtitulo {
+  margin: 0 0 32px;
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--texto-secundario);
+}
+
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+}
+
+.campo label {
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--texto-secundario);
+}
+
+.campo input {
+  width: 100%;
+  padding: 8px 0;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #9ca3af;
+  color: var(--texto);
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  transition: border-color 0.3s ease;
+}
+
+.campo input:focus {
+  outline: none;
+  border-bottom-color: var(--dorado);
+  box-shadow: none;
+}
+
+.campo input::placeholder {
+  color: #8e9192;
+}
+
+.error {
+  margin: -8px 0 0;
+  font-size: 14px;
+  line-height: 20px;
+  color: #ffb4ab;
+}
+
+.enviar {
+  width: 100%;
+  margin-top: 8px;
+  padding: 14px 24px;
+}
+
+.enviar:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.ayuda {
+  margin: 24px 0 0;
+  font-size: 12px;
+  line-height: 20px;
+  color: #8e9192;
+}
+
+.ayuda span {
+  color: var(--texto-secundario);
+}
+
+.volver {
+  margin: 16px 0 0;
+  font-size: 14px;
+}
+
+.volver a:hover {
+  text-decoration: underline;
+}
+
+@media (min-width: 768px) {
+  .login {
+    padding: 64px;
+  }
+}

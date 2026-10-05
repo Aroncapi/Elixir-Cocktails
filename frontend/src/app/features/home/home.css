@@ -1,0 +1,246 @@
+/* ---------- Hero split-screen ---------- */
+.hero {
+  display: flex;
+  flex-direction: column;
+  min-height: 700px;
+  height: 100svh;
+  padding-top: 80px;
+}
+
+.hero-imagen {
+  position: relative;
+  height: 50vh;
+  background-color: #0f0f0f;
+  background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDqVukE5D_yeZbumQBSngJ-geSzTUBkY5lq1cdXikGIJU7O4QCFtds97VBgp16jM0Clk6pGiuygJYHHYbFxNB5yXI65nQWvhyjlPe2yCJfHx9up7SJBwvAujtoIvBDWV4bWb0HJg4egkEl6tp3oRVQAbnZx7nfRx5rnOc7X_FTDFnZpoWsbhqKFww5g14CmBBxZa3Cg1QB4AHrphJWNbjqM-jId2dPvyPxCIP50xMuuO2Lfkj8I_TP4');
+  background-size: cover;
+  background-position: center;
+}
+
+.hero-imagen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, #0f0f0f 0%, rgba(15, 15, 15, 0) 100%);
+}
+
+.hero-contenido {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 20px 64px;
+  background: #0f0f0f;
+}
+
+.hero-caja {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  animation: aparecer 1s ease-out both;
+}
+
+.hero-texto h1 {
+  margin: 0 0 16px;
+  font-family: 'Playfair Display', serif;
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 40px;
+  color: #dce3f0;
+}
+
+.hero-texto p {
+  margin: 0;
+  font-size: 18px;
+  line-height: 28px;
+  color: #c4c7c7;
+  max-width: 448px;
+}
+
+.dorado {
+  color: #d4af37;
+}
+
+.cursiva {
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* ---------- Acciones ---------- */
+.hero-acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.indicadores {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-top: 32px;
+  padding-top: 32px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.indicador {
+  display: flex;
+  flex-direction: column;
+}
+
+.cifra {
+  font-family: 'Playfair Display', serif;
+  font-size: 32px;
+  font-weight: 500;
+  color: #d4af37;
+}
+
+.etiqueta {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #c4c7c7;
+}
+
+.linea-vertical {
+  width: 1px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ---------- Filosofía ---------- */
+.filosofia {
+  padding: 96px 20px;
+  background: #151c25;
+}
+
+.contenedor {
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.titulo-seccion {
+  text-align: center;
+  margin-bottom: 64px;
+}
+
+.titulo-seccion h2 {
+  margin: 0 0 16px;
+  font-family: 'Playfair Display', serif;
+  font-size: 48px;
+  font-weight: 600;
+  color: #dce3f0;
+}
+
+.linea-dorada {
+  width: 64px;
+  height: 1px;
+  margin: 0 auto;
+  background: #d4af37;
+}
+
+.tarjetas {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+}
+
+.tarjeta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 32px;
+  background: #1a1a1a;
+  border-top: 1px solid rgba(212, 175, 55, 0.4);
+  transition: transform 0.3s ease;
+}
+
+.tarjeta:hover {
+  transform: translateY(-8px);
+}
+
+.icono-circular {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 24px;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: 50%;
+}
+
+.icono-circular .material-symbols-outlined {
+  font-size: 32px;
+  font-variation-settings: 'FILL' 1;
+}
+
+.tarjeta h3 {
+  margin: 0 0 16px;
+  font-family: 'Playfair Display', serif;
+  font-size: 32px;
+  font-weight: 500;
+  color: #dce3f0;
+}
+
+.tarjeta p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 24px;
+  color: #c4c7c7;
+}
+
+/* ---------- Responsive ---------- */
+@media (min-width: 768px) {
+  .hero {
+    flex-direction: row;
+    padding-top: 0;
+  }
+
+  .hero-imagen {
+    width: 50%;
+    height: auto;
+  }
+
+  .hero-imagen::after {
+    background: linear-gradient(to right, rgba(15, 15, 15, 0.2) 0%, rgba(15, 15, 15, 0.8) 100%);
+  }
+
+  .hero-contenido {
+    width: 50%;
+    padding: 64px;
+  }
+
+  .hero-texto h1 {
+    font-size: 64px;
+    font-weight: 700;
+    line-height: 72px;
+    letter-spacing: -0.02em;
+  }
+
+  .hero-acciones {
+    flex-direction: row;
+  }
+
+  .filosofia {
+    padding: 96px 64px;
+  }
+
+  .tarjetas {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

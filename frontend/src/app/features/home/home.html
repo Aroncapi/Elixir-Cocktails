@@ -1,0 +1,61 @@
+<!-- Hero split-screen -->
+<section class="hero">
+  <div class="hero-imagen"></div>
+
+  <div class="hero-contenido">
+    <div class="hero-caja">
+      <div class="hero-texto">
+        <h1>
+          Eleva tu Evento con<br />
+          <span class="dorado cursiva">Mixología de Autor</span>
+        </h1>
+        <p>
+          Experiencias de bar premium diseñadas para momentos inolvidables. Desde bodas
+          elegantes hasta eventos corporativos de alto nivel.
+        </p>
+      </div>
+
+      <div class="hero-acciones">
+        <a class="btn btn-primario" routerLink="/cotizador">
+          Cotizar mi evento
+          <span class="material-symbols-outlined flecha">arrow_forward</span>
+        </a>
+        <a class="btn btn-secundario" routerLink="/servicios">Ver servicios</a>
+      </div>
+
+      <div class="indicadores">
+        <div class="indicador">
+          <span class="cifra">500+</span>
+          <span class="etiqueta">Eventos exitosos</span>
+        </div>
+        <div class="linea-vertical"></div>
+        <div class="indicador">
+          <span class="cifra">100%</span>
+          <span class="etiqueta">Satisfacción</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Filosofía -->
+<section class="filosofia">
+  <div class="contenedor">
+    <div class="titulo-seccion">
+      <h2>Nuestra Filosofía</h2>
+      <div class="linea-dorada"></div>
+    </div>
+
+    <div class="tarjetas">
+      @for (item of filosofia; track item.titulo) {
+        <article class="tarjeta">
+          <div class="icono-circular">
+            <span class="material-symbols-outlined dorado">{{ item.icono }}</span>
+          </div>
+          <h3>{{ item.titulo }}</h3>
+          <p>{{ item.texto }}</p>
+        </article>
+      }
+    </div>
+  </div>
+</section>

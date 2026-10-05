@@ -1,0 +1,100 @@
+:root {
+  --fondo: #0f0f0f;
+  --superficie: #151c25;
+  --tarjeta: #1a1a1a;
+  --dorado: #d4af37;
+  --dorado-hover: #b5952f;
+  --texto: #dce3f0;
+  --texto-secundario: #c4c7c7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+body ::selection {
+  background: var(--dorado);
+  color: #0f0f0f;
+}
+
+h1,
+h2,
+h3 {
+  font-family: 'Playfair Display', serif;
+}
+
+a {
+  color: var(--dorado);
+  text-decoration: none;
+}
+
+/* ---------- Botones (DESIGN.md: rectos 0px, uppercase, tracking 0.05em) ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 32px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  line-height: 20px;
+  text-transform: uppercase;
+  border-radius: 0;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-primario {
+  background: var(--dorado);
+  color: #0f0f0f;
+}
+
+.btn-primario:hover {
+  background: var(--dorado-hover);
+  text-decoration: none;
+}
+
+.btn-secundario {
+  background: transparent;
+  color: var(--texto);
+  border: 1px solid var(--dorado);
+}
+
+.btn-secundario:hover {
+  background: rgba(212, 175, 55, 0.1);
+  text-decoration: none;
+}
+
+/* ---------- Iconos Material ---------- */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}

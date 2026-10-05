@@ -1,0 +1,91 @@
+<main class="contacto">
+  <!-- Lado izquierdo: formulario -->
+  <section class="lado-formulario">
+    <div class="marca-agua" aria-hidden="true"></div>
+
+    <div class="formulario-caja">
+      <h1>Hablemos de tu Próximo Evento</h1>
+
+      <form class="formulario">
+        <div class="campo">
+          <label for="nombre">Nombre Completo</label>
+          <input id="nombre" type="text" placeholder="Ej. Ana de Armas" />
+        </div>
+
+        <div class="campo">
+          <label for="email">Email Corporativo</label>
+          <input id="email" type="email" placeholder="ana@empresa.com" />
+        </div>
+
+        <div class="campo">
+          <label for="fecha">Fecha del Evento</label>
+          <input id="fecha" type="date" />
+        </div>
+
+        <div class="campo">
+          <label for="mensaje">Detalles del Evento</label>
+          <textarea
+            id="mensaje"
+            rows="4"
+            placeholder="Cuéntanos sobre el número de invitados y el tipo de servicio que buscas..."
+          ></textarea>
+        </div>
+
+        <button class="enviar" type="button">Solicitar Presupuesto</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Lado derecho: información -->
+  <section class="lado-info">
+    <div class="fondo-info" aria-hidden="true">
+      <img [src]="fondoInfo" alt="" />
+      <div class="fondo-degradado"></div>
+    </div>
+
+    <div class="info-contenido">
+      <div class="info-caja">
+        <div>
+          <h2>Información de Contacto</h2>
+          <ul class="datos">
+            <li class="dato">
+              <span class="material-symbols-outlined">location_on</span>
+              <div>
+                <strong>Ubicación</strong>
+                <p>Polanco, CDMX<br />Atención previa cita.</p>
+              </div>
+            </li>
+
+            <li class="dato">
+              <span class="material-symbols-outlined">mail</span>
+              <div>
+                <strong>Email</strong>
+                <a href="mailto:concierge@velvetgilt.com">concierge@velvetgilt.com</a>
+              </div>
+            </li>
+
+            <li class="dato">
+              <span class="material-symbols-outlined">forum</span>
+              <div>
+                <strong>WhatsApp Business</strong>
+                <a href="#">+52 55 1234 5678</a>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <div class="siguenos">
+          <h3>Síguenos</h3>
+          <div class="redes">
+            <a class="red" href="#" aria-label="Instagram">
+              <span class="material-symbols-outlined">photo_camera</span>
+            </a>
+            <a class="red" href="#" aria-label="Facebook">
+              <span class="material-symbols-outlined">thumb_up</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>

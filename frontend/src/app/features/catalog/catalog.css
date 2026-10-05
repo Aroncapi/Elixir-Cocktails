@@ -1,0 +1,67 @@
+.carta {
+  padding: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.carta h1 {
+  font-family: 'Playfair Display', serif;
+  color: var(--dorado);
+  border-bottom: 1px solid var(--dorado);
+  padding-bottom: 12px;
+}
+
+.contador,
+.estado {
+  color: #8b97ab;
+}
+
+.estado.error {
+  color: #e06c75;
+}
+
+.grid {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.carta-item {
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 16px;
+}
+
+.encabezado {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.carta-item h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  margin: 0;
+  color: var(--texto);
+}
+
+.categoria {
+  font-size: 0.7rem;
+  letter-spacing: 1px;
+  color: var(--dorado);
+  border: 1px solid var(--dorado);
+  padding: 2px 6px;
+  white-space: nowrap;
+}
+
+.ingredientes {
+  font-size: 0.9rem;
+  color: #b7c1d4;
+}
+
+.carta-item small {
+  color: #7b8698;
+}

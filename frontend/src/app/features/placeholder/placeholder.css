@@ -1,0 +1,30 @@
+.pendiente {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  min-height: 70vh;
+  padding: 96px 20px;
+  text-align: center;
+}
+
+.pendiente h1 {
+  margin: 0;
+  font-family: 'Playfair Display', serif;
+  font-size: 48px;
+  font-weight: 600;
+  color: #dce3f0;
+}
+
+.pendiente .linea-dorada {
+  width: 64px;
+  height: 1px;
+  background: #d4af37;
+}
+
+.pendiente p {
+  margin: 0;
+  color: #c4c7c7;
+  max-width: 480px;
+}

@@ -1,0 +1,110 @@
+/* ---------- Servicios (wireframe servicios_velvet_gilt) ---------- */
+.servicios {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 128px 20px 96px;
+}
+
+.encabezado {
+  max-width: 768px;
+  margin: 0 auto 96px;
+  text-align: center;
+}
+
+.encabezado h1 {
+  margin: 0 0 24px;
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(36px, 7vw, 64px);
+  font-weight: 700;
+  line-height: 1.125;
+  letter-spacing: -0.02em;
+  color: var(--texto);
+}
+
+.encabezado p {
+  margin: 0;
+  font-size: 18px;
+  line-height: 28px;
+  color: var(--texto-secundario);
+}
+
+/* ---------- Rejilla de tarjetas ---------- */
+.rejilla {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  margin-bottom: 128px;
+}
+
+.servicio {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #192029;
+  border-top: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: 8px;
+}
+
+.servicio-imagen {
+  position: relative;
+  height: 256px;
+  overflow: hidden;
+}
+
+.servicio-imagen img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.7s ease;
+}
+
+.servicio:hover .servicio-imagen img {
+  transform: scale(1.05);
+}
+
+.degradado {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, var(--fondo), transparent);
+  opacity: 0.8;
+}
+
+.servicio-cuerpo {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 32px;
+}
+
+.servicio-cuerpo h3 {
+  margin: 0 0 16px;
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 40px;
+  color: #e9c349;
+}
+
+.servicio-cuerpo p {
+  flex: 1;
+  margin: 0 0 32px;
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--texto-secundario);
+}
+
+.cta {
+  align-self: flex-start;
+  padding: 12px 24px;
+}
+
+/* ---------- Responsive ---------- */
+@media (min-width: 768px) {
+  .servicios {
+    padding: 128px 64px 96px;
+  }
+
+  .rejilla {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

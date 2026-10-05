@@ -1,0 +1,275 @@
+<div class="panel">
+  <!-- Barra lateral -->
+  <aside class="lateral" [class.abierto]="menuAbierto()">
+    <div class="lateral-cabecera">
+      <div class="avatar">
+        <img
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuBuXbaj93r6GZ0UQGFUfDd7Mj9zj7sQcU0e2le76JSvQpjMZVWp36-CtosvVMb1Zz4SXJVJDWwMDopB8Zc2CMc-6ntcGY8BsPaHFvk0aq_GjqMn0PcbsOdEvHA8QjRnHs3QkYRFKmTL5hNJ2w8oweDi2PNKvzdKJsPTPe2vKGgUqX7gIwJABnE-F621IS5NIz7OxekPphnBftX_VwkmM0nLjylzX0NWAY0mJvCl9JqBCbG_KukJNC8G"
+          alt="Perfil admin"
+        />
+      </div>
+      <h2>Admin Panel</h2>
+      <p>Velvet &amp; Gilt</p>
+    </div>
+
+    <ul class="lateral-menu">
+      <li><span class="item inactivo"><span class="material-symbols-outlined">dashboard</span>Dashboard</span></li>
+      <li><span class="item inactivo"><span class="material-symbols-outlined">description</span>Solicitudes</span></li>
+      <li><span class="item activo"><span class="material-symbols-outlined">menu_book</span>Catálogo</span></li>
+      <li><span class="item inactivo"><span class="material-symbols-outlined">settings</span>Configuración</span></li>
+    </ul>
+
+    <div class="lateral-pie">
+      <button class="nueva-reserva" type="button" disabled title="Disponible en la Fase 4">
+        Nueva Reserva
+      </button>
+      <button class="salir" type="button" (click)="cerrarSesion()">
+        <span class="material-symbols-outlined">logout</span>Cerrar Sesión
+      </button>
+    </div>
+  </aside>
+
+  @if (menuAbierto()) {
+    <div class="velo-menu" (click)="alternarMenu()"></div>
+  }
+
+  <!-- Cabecera superior -->
+  <header class="superior">
+    <div class="superior-izquierda">
+      <button class="boton-menu" type="button" (click)="alternarMenu()" aria-label="Menú">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+      <h1>Catálogo de Cócteles</h1>
+    </div>
+
+    <div class="superior-derecha">
+      <div class="buscador">
+        <span class="material-symbols-outlined">search</span>
+        <input
+          type="text"
+          placeholder="Buscar cóctel..."
+          [ngModel]="busqueda()"
+          (ngModelChange)="busqueda.set($event)"
+        />
+      </div>
+      <span class="icono-decorativo" aria-hidden="true">
+        <span class="material-symbols-outlined">notifications</span>
+      </span>
+      <span class="icono-decorativo" aria-hidden="true">
+        <span class="material-symbols-outlined">help</span>
+      </span>
+    </div>
+  </header>
+
+  <!-- Contenido -->
+  <main class="contenido">
+    <div class="barra-acciones">
+      <div class="acciones-izquierda">
+        <button class="boton-filtrar" type="button" (click)="filtrosVisibles.set(!filtrosVisibles())">
+          <span class="material-symbols-outlined">filter_list</span>
+          Filtrar
+        </button>
+        <div class="separador"></div>
+        <button class="boton-agregar" type="button" (click)="abrirNuevo()">
+          <span class="material-symbols-outlined">add</span>
+          Agregar Nuevo
+        </button>
+      </div>
+    </div>
+
+    @if (filtrosVisibles()) {
+      <div class="filtros">
+        <label for="filtro-categoria">Categoría</label>
+        <select
+          id="filtro-categoria"
+          [ngModel]="categoriaFiltro()"
+          (ngModelChange)="categoriaFiltro.set($event)"
+        >
+          <option value="">Todas</option>
+          @for (cat of ['SIGNATURE', 'CLASICOS', 'CITRICOS', 'SIN_ALCOHOL']; track cat) {
+            <option [value]="cat">{{ etiquetaCategoria(cat) }}</option>
+          }
+        </select>
+        <span class="contador">{{ visibles().length }} resultado(s)</span>
+      </div>
+    }
+
+    @if (cargando()) {
+      <p class="estado">Cargando catálogo...</p>
+    }
+
+    @if (error()) {
+      <p class="estado error">{{ error() }}</p>
+    }
+
+    @if (!cargando() && !error()) {
+      <div class="rejilla">
+        @for (c of visibles(); track c.id) {
+          <article class="tarjeta" [class.inactiva]="!c.active">
+            <div class="tarjeta-imagen">
+              @if (c.imageUrl) {
+                <img [src]="c.imageUrl" [alt]="c.name" />
+              } @else {
+                <div class="sin-imagen">
+                  <span class="material-symbols-outlined">local_bar</span>
+                </div>
+              }
+              <div class="degradado"></div>
+
+              <label class="interruptor">
+                <input
+                  type="checkbox"
+                  [checked]="c.active"
+                  (change)="alternarActivo(c)"
+                  [attr.aria-label]="'Activar o desactivar ' + c.name"
+                />
+                <span class="pista"><span class="cursor"></span></span>
+              </label>
+
+              @if (!c.active) {
+                <span class="badge-inactivo">Inactivo</span>
+              }
+            </div>
+
+            <div class="tarjeta-cuerpo">
+              <span class="categoria">{{ etiquetaCategoria(c.category) }}</span>
+              <h3>{{ c.name }}</h3>
+              <p class="ingredientes">{{ c.ingredients }}</p>
+
+              <div class="pie">
+                <div class="etiquetas">
+                  @for (t of c.eventTypes; track t.id) {
+                    <span class="etiqueta">{{ t.name }}</span>
+                  }
+                </div>
+                <div class="acciones-fila">
+                  <button type="button" title="Editar" (click)="abrirEditar(c)">
+                    <span class="material-symbols-outlined">edit</span>
+                  </button>
+                  <button
+                    class="eliminar"
+                    type="button"
+                    title="Desactivar"
+                    (click)="eliminar(c)"
+                  >
+                    <span class="material-symbols-outlined">delete</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </article>
+        } @empty {
+          <p class="estado">No hay cóctelos que coincidan.</p>
+        }
+      </div>
+    }
+  </main>
+</div>
+
+<!-- Modal Agregar / Editar -->
+@if (modalAbierto()) {
+  <div class="modal">
+    <div class="modal-fondo" (click)="cerrarModal()"></div>
+
+    <div class="modal-caja" role="dialog" aria-modal="true">
+      <div class="modal-cabecera">
+        <div>
+          <h2>{{ editandoId() === null ? 'Agregar Nuevo Cóctel' : 'Editar Cóctel' }}</h2>
+          <p>
+            {{ editandoId() === null
+              ? 'Completa los detalles para añadir al catálogo de Velvet & Gilt.'
+              : 'Actualiza la información del cóctel del catálogo.' }}
+          </p>
+        </div>
+        <button class="cerrar" type="button" (click)="cerrarModal()" aria-label="Cerrar">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <div class="modal-cuerpo">
+        <!-- Izquierda: imagen -->
+        <div class="zona-imagen">
+          <label>Imagen del Cóctel</label>
+          <div class="zona-dashed">
+            @if (formulario.imageUrl) {
+              <img [src]="formulario.imageUrl" alt="Vista previa" />
+            } @else {
+              <div class="placeholder">
+                <span class="material-symbols-outlined">add_a_photo</span>
+                <p>Pega la URL de la imagen</p>
+                <small>JPG, PNG o WEBP</small>
+              </div>
+            }
+          </div>
+          <input
+            type="url"
+            placeholder="https://..."
+            [(ngModel)]="formulario.imageUrl"
+            (ngModelChange)="formulario.imageUrl = $event || null"
+          />
+        </div>
+
+        <!-- Derecha: formulario -->
+        <div class="zona-formulario">
+          <div class="campo">
+            <label for="c-nombre">Nombre del Cóctel *</label>
+            <input id="c-nombre" type="text" placeholder="Ej. Velvet Negroni" [(ngModel)]="formulario.name" />
+          </div>
+
+          <div class="campo">
+            <label for="c-categoria">Categoría *</label>
+            <div class="select">
+              <select id="c-categoria" [(ngModel)]="formulario.category">
+                <option value="" disabled>Selecciona una categoría</option>
+                <option value="SIGNATURE">Signature</option>
+                <option value="CLASICOS">Clásicos</option>
+                <option value="CITRICOS">Cítricos</option>
+                <option value="SIN_ALCOHOL">Sin Alcohol</option>
+              </select>
+              <span class="material-symbols-outlined flecha">expand_more</span>
+            </div>
+          </div>
+
+          <div class="campo">
+            <label for="c-ingredientes">Descripción / Ingredientes *</label>
+            <textarea
+              id="c-ingredientes"
+              rows="3"
+              placeholder="Describe el perfil de sabor y los ingredientes principales..."
+              [(ngModel)]="formulario.ingredients"
+            ></textarea>
+          </div>
+
+          <div class="campo">
+            <label>Recomendado para eventos</label>
+            <div class="casillas">
+              @for (t of eventTypes(); track t.id) {
+                <label class="casilla">
+                  <input
+                    type="checkbox"
+                    [checked]="eventoMarcado(t.id)"
+                    (change)="alternarEvento(t.id)"
+                  />
+                  <span>{{ t.name }}</span>
+                </label>
+              } @empty {
+                <span class="sin-eventos">No hay tipos de evento disponibles.</span>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      @if (errorModal()) {
+        <p class="modal-error" role="alert">{{ errorModal() }}</p>
+      }
+
+      <div class="modal-pie">
+        <button class="btn-secundario" type="button" (click)="cerrarModal()">Cancelar</button>
+        <button class="btn-guardar" type="button" (click)="guardar()" [disabled]="guardando()">
+          {{ guardando() ? 'Guardando…' : editandoId() === null ? 'Guardar Cóctel' : 'Guardar Cambios' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

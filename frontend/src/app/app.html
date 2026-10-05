@@ -1,0 +1,33 @@
+@if (!enPanel()) {
+  <nav class="barra">
+    <a class="marca" routerLink="/">Velvet &amp; Gilt</a>
+
+    <div class="enlaces" [class.abierto]="menuAbierto()">
+      <a routerLink="/" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: true }">Inicio</a>
+      <a routerLink="/servicios" routerLinkActive="activo">Servicios</a>
+      <a routerLink="/cotizador" routerLinkActive="activo">Cotizador</a>
+      <a routerLink="/contacto" routerLinkActive="activo">Contacto</a>
+      @if (auth.autenticado) {
+        <a routerLink="/panel" routerLinkActive="activo">Panel</a>
+      }
+    </div>
+
+    <div class="acciones">
+      @if (auth.usuario(); as usuario) {
+        <span class="usuario">{{ usuario.email }}</span>
+        <button class="btn btn-secundario btn-sesion" type="button" (click)="cerrarSesion()">
+          Cerrar sesión
+        </button>
+      } @else {
+        <a class="btn btn-primario btn-sesion" routerLink="/login">Iniciar sesión</a>
+      }
+      <button class="boton-menu" type="button" (click)="alternarMenu()" aria-label="Menu">
+        <span class="material-symbols-outlined">{{ menuAbierto() ? 'close' : 'menu' }}</span>
+      </button>
+    </div>
+  </nav>
+}
+
+<main>
+  <router-outlet></router-outlet>
+</main>

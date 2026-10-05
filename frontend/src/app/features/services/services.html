@@ -1,0 +1,25 @@
+<main class="servicios">
+  <header class="encabezado">
+    <h1>Nuestras Experiencias</h1>
+    <p>
+      Elevando cada momento a través de la maestría artesanal y un servicio impecable.
+      Descubre nuestras propuestas diseñadas para eventos exclusivos y paladares exigentes.
+    </p>
+  </header>
+
+  <section class="rejilla">
+    @for (servicio of servicios; track servicio.titulo) {
+      <article class="servicio">
+        <div class="servicio-imagen">
+          <img [src]="servicio.imagen" [alt]="servicio.titulo" />
+          <div class="degradado"></div>
+        </div>
+        <div class="servicio-cuerpo">
+          <h3>{{ servicio.titulo }}</h3>
+          <p>{{ servicio.texto }}</p>
+          <a class="btn btn-primario cta" routerLink="/cotizador">Cotizar Evento</a>
+        </div>
+      </article>
+    }
+  </section>
+</main>
