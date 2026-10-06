@@ -4,9 +4,9 @@ PROYECTO: VELVET & GILT - Plataforma de servicios de mixologia para eventos
 Arquitectura: Microservicios (Spring Cloud) + Angular
 Ubicacion:    C:\Users\AROM\Projects\bar-events
 Nota maestra: LEER ESTA NOTA ANTES DE TOCAR CUALQUIER COSA
-Ultima actualizacion: 05/10/2026 - SESION 7 (parcial): commit 458b1b5 ya
-subido (fases 4-6 + WhatsApp/config/contacto/CORS), Docker listo para la
-nube. Servicios corriendo en la PC (jar) + ng serve con --host 0.0.0.0.
+Ultima actualizacion: 05/10/2026 - SESION 7 (parcial): commits 458b1b5
+(fases 4-6 + WhatsApp/config/contacto/CORS) y dd480de (Docker) ya subidos.
+Servicios corriendo en la PC (jar) + ng serve con --host 0.0.0.0.
 Ver 0.7 (detalle sesion 6), 0.6 (sesion 5) y 0.4 (handoff sesion 7).
 ================================================================================
 
@@ -690,7 +690,7 @@ PENDIENTES DE BACKEND AUN:
       - frontend: whatsapp.spec -> 9 archivos / 16 tests (2 nuevas:
         WHATSAPP_OWNER/enlaceConDueno y mensajeParaDueno)
 
-  [x] SESION 7 (parcial, sin commit) - CELULAR, CONFIGURACION Y CONTACTO
+  [x] SESION 7 (parcial) - CELULAR, CONFIGURACION Y CONTACTO
       - CORS: el telefono fallaba con "No se pudo enviar la solicitud" porque
         el gateway solo aceptaba Origin localhost:4200 (devolvia 403 sin
         cuerpo). CorsConfig ahora lee app.cors.allowed-origins (properties)
