@@ -1,0 +1,230 @@
+<div class="panel">
+  <!-- Barra lateral -->
+  <aside class="lateral" [class.abierto]="menuAbierto()">
+    <div class="lateral-cabecera">
+      <div class="avatar">
+        <img
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuBuXbaj93r6GZ0UQGFUfDd7Mj9zj7sQcU0e2le76JSvQpjMZVWp36-CtosvVMb1Zz4SXJVJDWwMDopB8Zc2CMc-6ntcGY8BsPaHFvk0aq_GjqMn0PcbsOdEvHA8QjRnHs3QkYRFKmTL5hNJ2w8oweDi2PNKvzdKJsPTPe2vKGgUqX7gIwJABnE-F621IS5NIz7OxekPphnBftX_VwkmM0nLjylzX0NWAY0mJvCl9JqBCbG_KukJNC8G"
+          alt="Perfil admin"
+        />
+      </div>
+      <h2>Velvet &amp; Gilt</h2>
+      <p>Admin Panel</p>
+    </div>
+
+    <ul class="lateral-menu">
+      <li><a class="item" routerLink="/panel/dashboard" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: true }"><span class="material-symbols-outlined">dashboard</span>Dashboard</a></li>
+      <li><a class="item" routerLink="/panel/solicitudes" routerLinkActive="activo"><span class="material-symbols-outlined">description</span>Solicitudes</a></li>
+      <li><a class="item" routerLink="/panel/calendario" routerLinkActive="activo"><span class="material-symbols-outlined">calendar_month</span>Calendario</a></li>
+      <li><a class="item" routerLink="/panel/clientes" routerLinkActive="activo"><span class="material-symbols-outlined">group</span>Clientes</a></li>
+      <li><a class="item" routerLink="/panel" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: true }"><span class="material-symbols-outlined">menu_book</span>Catálogo</a></li>
+      <li><a class="item" routerLink="/panel/configuracion" routerLinkActive="activo"><span class="material-symbols-outlined">settings</span>Configuración</a></li>
+    </ul>
+
+    <div class="lateral-pie">
+      <button class="nueva-reserva" type="button" routerLink="/cotizador">
+        Nueva Reserva
+      </button>
+      <button class="salir" type="button" (click)="cerrarSesion()">
+        <span class="material-symbols-outlined">logout</span>Cerrar Sesión
+      </button>
+    </div>
+  </aside>
+
+  @if (menuAbierto()) {
+    <div class="velo-menu" (click)="alternarMenu()"></div>
+  }
+
+  <!-- Cabecera superior -->
+  <header class="superior">
+    <div class="buscador">
+      <span class="material-symbols-outlined">search</span>
+      <input
+        type="text"
+        placeholder="Buscar folio, cliente o evento..."
+        [ngModel]="busqueda()"
+        (ngModelChange)="cambiarBusqueda($event)"
+      />
+    </div>
+
+    <div class="superior-derecha">
+      <span class="icono-decorativo" aria-hidden="true">
+        <span class="material-symbols-outlined">notifications</span>
+      </span>
+      <span class="icono-decorativo" aria-hidden="true">
+        <span class="material-symbols-outlined">help</span>
+      </span>
+      <button class="boton-menu" type="button" (click)="alternarMenu()" aria-label="Menú">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Contenido -->
+  <main class="contenido">
+    <div class="encabezado">
+      <div class="encabezado-texto">
+        <h1>Visión General</h1>
+        <p>Métricas y solicitudes recientes.</p>
+      </div>
+
+      <div class="segmentos">
+        @for (e of estados; track e) {
+          <button type="button" [class.activo]="estadoFiltro() === e" (click)="filtrarPorEstado(e)">
+            {{ e === '' ? 'Todas' : etiquetaEstado(e) }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Métricas -->
+    <div class="metricas">
+      <div class="metrica">
+        <div class="metrica-cabecera">
+          <span>Total Solicitudes</span>
+          <span class="material-symbols-outlined">description</span>
+        </div>
+        <strong class="cifra">{{ totalSolicitudes() }}</strong>
+        <div class="metrica-pie positivo">
+          <span class="material-symbols-outlined">trending_up</span>
+          Registradas en el sistema
+        </div>
+      </div>
+
+      <div class="metrica">
+        <div class="metrica-cabecera">
+          <span>Ingresos Estimados</span>
+          <span class="material-symbols-outlined">payments</span>
+        </div>
+        <strong class="cifra">{{ dinero(ingresosEstimados()) }}</strong>
+        <div class="metrica-pie positivo">
+          <span class="material-symbols-outlined">trending_up</span>
+          Solicitudes no canceladas
+        </div>
+      </div>
+
+      <div class="metrica">
+        <div class="metrica-cabecera">
+          <span>Próximos Eventos</span>
+          <span class="material-symbols-outlined">event</span>
+        </div>
+        <strong class="cifra">{{ proximosEventos() }}</strong>
+        <div class="metrica-pie neutro">Próximos 7 días</div>
+      </div>
+
+      <div class="metrica">
+        <div class="metrica-cabecera">
+          <span>Pendientes de Acción</span>
+          <span class="material-symbols-outlined">pending_actions</span>
+        </div>
+        <strong class="cifra">{{ pendientes() }}</strong>
+        <div class="metrica-pie alerta">Requieren atención</div>
+      </div>
+    </div>
+
+    @if (cargando()) {
+      <p class="estado">Cargando solicitudes...</p>
+    }
+
+    @if (error()) {
+      <p class="estado error">{{ error() }}</p>
+    }
+
+    @if (!cargando() && !error()) {
+      <section class="tabla-tarjeta">
+        <div class="tabla-cabecera">
+          <h3>Solicitudes Recientes</h3>
+          <span class="contador">{{ total() }} resultado(s)</span>
+        </div>
+
+        <div class="tabla-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Folio</th>
+                <th>Cliente</th>
+                <th>Tipo Evento</th>
+                <th>Fecha</th>
+                <th class="derecha">Invitados</th>
+                <th class="derecha">Monto</th>
+                <th>Estado</th>
+                <th class="derecha">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (s of solicitudes(); track s.id) {
+                <tr>
+                  <td class="folio">#{{ s.folio }}</td>
+                  <td class="celda-cliente">
+                    <span class="inicial">{{ s.client.name.charAt(0) }}</span>
+                    <span class="datos">
+                      <span class="nombre">{{ s.client.name }}</span>
+                      <span class="correo">{{ s.client.email }}</span>
+                    </span>
+                  </td>
+                  <td class="texto">{{ s.eventTypeName }}</td>
+                  <td class="texto">{{ fechaCorta(s.eventDate) }}</td>
+                  <td class="numero">{{ s.guests }}</td>
+                  <td class="numero">{{ dinero(s.breakdown.total) }}</td>
+                  <td>
+                    <span
+                      class="badge"
+                      [class.pendiente]="s.status === 'PENDIENTE'"
+                      [class.confirmado]="s.status === 'CONFIRMADO'"
+                      [class.cancelado]="s.status === 'CANCELADO'"
+                    >
+                      {{ etiquetaEstado(s.status) }}
+                    </span>
+                  </td>
+                  <td class="derecha">
+                    <div class="acciones-fila">
+                      <button type="button" title="Ver detalle" (click)="verDetalle(s)">
+                        <span class="material-symbols-outlined">visibility</span>
+                      </button>
+                      <button
+                        type="button"
+                        [title]="tieneWhatsapp(s) ? 'Enviar paquete por WhatsApp' : 'Sin WhatsApp registrado'"
+                        [disabled]="!tieneWhatsapp(s)"
+                        (click)="abrirWhatsApp(s)"
+                      >
+                        <span class="material-symbols-outlined">chat</span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td class="estado-vacio" colspan="8">No hay solicitudes que coincidan.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <footer class="paginacion">
+          <span>
+            Mostrando {{ desde() }} a {{ hasta() }} de {{ total() }} solicitud(es)
+          </span>
+          <div class="paginacion-botones">
+            <button
+              type="button"
+              (click)="irAPagina(pagina() - 1)"
+              [disabled]="pagina() === 1"
+              aria-label="Página anterior"
+            >
+              <span class="material-symbols-outlined">chevron_left</span>
+            </button>
+            <button
+              type="button"
+              (click)="irAPagina(pagina() + 1)"
+              [disabled]="pagina() === totalPaginas()"
+              aria-label="Página siguiente"
+            >
+              <span class="material-symbols-outlined">chevron_right</span>
+            </button>
+          </div>
+        </footer>
+      </section>
+    }
+  </main>
+</div>

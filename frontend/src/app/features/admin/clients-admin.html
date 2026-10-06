@@ -13,15 +13,16 @@
     </div>
 
     <ul class="lateral-menu">
-      <li><span class="item inactivo"><span class="material-symbols-outlined">dashboard</span>Dashboard</span></li>
-      <li><span class="item inactivo"><span class="material-symbols-outlined">description</span>Solicitudes</span></li>
-      <li><a class="item activo" routerLink="/panel/clientes"><span class="material-symbols-outlined">group</span>Clientes</a></li>
-      <li><a class="item inactivo" routerLink="/panel"><span class="material-symbols-outlined">menu_book</span>Catálogo</a></li>
-      <li><span class="item inactivo"><span class="material-symbols-outlined">settings</span>Configuración</span></li>
+      <li><a class="item" routerLink="/panel/dashboard" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: true }"><span class="material-symbols-outlined">dashboard</span>Dashboard</a></li>
+      <li><a class="item" routerLink="/panel/solicitudes" routerLinkActive="activo"><span class="material-symbols-outlined">description</span>Solicitudes</a></li>
+      <li><a class="item" routerLink="/panel/calendario" routerLinkActive="activo"><span class="material-symbols-outlined">calendar_month</span>Calendario</a></li>
+      <li><a class="item" routerLink="/panel/clientes" routerLinkActive="activo"><span class="material-symbols-outlined">group</span>Clientes</a></li>
+      <li><a class="item" routerLink="/panel" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: true }"><span class="material-symbols-outlined">menu_book</span>Catálogo</a></li>
+      <li><a class="item" routerLink="/panel/configuracion" routerLinkActive="activo"><span class="material-symbols-outlined">settings</span>Configuración</a></li>
     </ul>
 
     <div class="lateral-pie">
-      <button class="nueva-reserva" type="button" disabled title="Disponible en la Fase 4">
+      <button class="nueva-reserva" type="button" routerLink="/cotizador">
         Nueva Reserva
       </button>
       <button class="salir" type="button" (click)="cerrarSesion()">

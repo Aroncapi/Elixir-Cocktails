@@ -1,0 +1,507 @@
+@if (confirmada(); as solicitud) {
+  <!-- ============ Confirmación (wireframe confirmación) ============ -->
+  <div class="confirmacion">
+    <div class="heroe">
+      <div class="icono-ok">
+        <span class="material-symbols-outlined">check_circle</span>
+      </div>
+      <h1>Solicitud Recibida</h1>
+      <p>
+        Su solicitud ha sido registrada exitosamente en nuestro sistema de reservas.
+        Estamos preparando una propuesta excepcional para su evento.
+      </p>
+    </div>
+
+    <div class="bento">
+      <div class="tarjeta-folio">
+        <div>
+          <p class="etiqueta">Folio de Referencia</p>
+          <p class="folio">#{{ solicitud.folio }}</p>
+        </div>
+        <a class="btn btn-primario" [href]="pdfLink(solicitud)" download>
+          <span class="material-symbols-outlined">download</span>
+          Descargar Resumen
+        </a>
+      </div>
+
+      <div class="tarjeta-detalle">
+        <span class="material-symbols-outlined">calendar_today</span>
+        <h3>Fecha del Evento</h3>
+        <p>{{ fechaLegible(solicitud.eventDate) }}</p>
+      </div>
+
+      <div class="tarjeta-detalle">
+        <span class="material-symbols-outlined">location_on</span>
+        <h3>Ubicación</h3>
+        <p>{{ solicitud.location || 'Por definir' }}</p>
+      </div>
+
+      <div class="tarjeta-detalle">
+        <span class="material-symbols-outlined">local_bar</span>
+        <h3>Servicio Seleccionado</h3>
+        <p>
+          {{ solicitud.level === 'PREMIUM' ? 'Mixología Premium' : 'Mixología Base' }}
+          · {{ solicitud.eventTypeName }}
+        </p>
+      </div>
+    </div>
+
+    <div class="link-seguimiento">
+      <div class="link-texto">
+        <span class="material-symbols-outlined">link</span>
+        <div>
+          <h3>Link de Seguimiento</h3>
+          <p>Guarda este enlace para consultar el estado de tu solicitud en cualquier momento.</p>
+        </div>
+      </div>
+      <div class="link-caja">
+        <code>{{ linkSeguimiento(solicitud) }}</code>
+        <button class="btn btn-secundario" type="button" (click)="copiarEnlace(solicitud)">
+          <span class="material-symbols-outlined">{{ enlaceCopiado() ? 'check' : 'content_copy' }}</span>
+          {{ enlaceCopiado() ? 'Copiado' : 'Copiar link' }}
+        </button>
+      </div>
+      <a class="btn-link" [href]="linkSeguimiento(solicitud)">
+        Abrir mi solicitud
+        <span class="material-symbols-outlined">open_in_new</span>
+      </a>
+      <a class="btn btn-primario" [href]="paqueteWhatsapp(solicitud)" target="_blank" rel="noopener">
+        <span class="material-symbols-outlined">chat</span>
+        Enviar mi paquete por WhatsApp
+      </a>
+    </div>
+
+    <div class="proximos">
+      <h2>Próximos Pasos</h2>
+      <div class="pasos-grid">
+        <div class="paso-siguiente">
+          <div class="numero">1</div>
+          <p>Revisión detallada por nuestro equipo de planners.</p>
+        </div>
+        <div class="paso-siguiente">
+          <div class="numero">2</div>
+          <p>Un Concierge se comunicará en menos de 24 horas.</p>
+        </div>
+        <div class="paso-siguiente">
+          <div class="numero">3</div>
+          <p>Confirmación de cata y degustación de menú.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="contacto-urgente">
+      <p>¿Tiene alguna consulta urgente?</p>
+      <a class="btn-contacto" [href]="contactoWhatsapp()" target="_blank" rel="noopener">
+        <span class="material-symbols-outlined">forum</span>
+        Contactar vía WhatsApp
+      </a>
+    </div>
+
+    <div class="finales">
+      <a class="btn btn-secundario" routerLink="/">Volver al Inicio</a>
+      <button class="btn btn-texto" type="button" (click)="reiniciar()">Iniciar otra solicitud</button>
+    </div>
+  </div>
+} @else {
+  <!-- ============ Cotizador 3 pasos ============ -->
+  <div class="cotizador">
+    <!-- Stepper -->
+    <div class="stepper">
+      <button class="paso" [class.activo]="paso() === 1" [class.listo]="paso() > 1" type="button"
+        (click)="irAPaso(1)" [disabled]="paso() === 1">
+        <span class="circulo">{{ paso() > 1 ? '✓' : '1' }}</span>
+        <span class="texto">Paso 1: Datos</span>
+      </button>
+      <span class="linea"></span>
+      <button class="paso" [class.activo]="paso() === 2" [class.listo]="paso() > 2" type="button"
+        (click)="irAPaso(2)" [disabled]="paso() <= 2">
+        <span class="circulo">{{ paso() > 2 ? '✓' : '2' }}</span>
+        <span class="texto">Cócteles</span>
+      </button>
+      <span class="linea"></span>
+      <button class="paso" [class.activo]="paso() === 3" type="button" (click)="irAPaso(3)" [disabled]="true">
+        <span class="circulo">3</span>
+        <span class="texto">Confirmación</span>
+      </button>
+    </div>
+
+    @if (error()) {
+      <p class="estado error">{{ error() }}</p>
+    }
+
+    @switch (paso()) {
+      @case (1) {
+        <!-- ============ Paso 1: datos del evento ============ -->
+        <div class="rejilla-paso1">
+          <div class="columna-form">
+            <header class="encabezado-paso">
+              <h1>Configura la Experiencia de tu Evento</h1>
+              <p>
+                Ingresa los detalles clave para que podamos diseñar un servicio de
+                mixología a medida para ti y tus invitados.
+              </p>
+            </header>
+
+            <section>
+              <h2 class="etiqueta-seccion">Tipo de Evento</h2>
+              <div class="tarjetas-tipos">
+                @for (tipo of tiposEvento(); track tipo.id) {
+                  <label class="tarjeta-tipo" [class.activa]="eventTypeId === tipo.id">
+                    <input class="oculto" type="radio" name="tipo-evento" [value]="tipo.id"
+                      [(ngModel)]="eventTypeId" />
+                    <div class="cabecera">
+                      <span class="titulo">{{ tipo.name }}</span>
+                      <span class="material-symbols-outlined check">check_circle</span>
+                    </div>
+                    <p>{{ tipo.description }}</p>
+                  </label>
+                } @empty {
+                  <p class="estado">No hay tipos de evento disponibles.</p>
+                }
+              </div>
+            </section>
+
+            <section>
+              <h2 class="etiqueta-seccion">Detalles del Evento</h2>
+              <div class="campos">
+                <label class="campo">
+                  <span>Invitados</span>
+                  <input type="number" name="invitados" min="1" max="100000" [(ngModel)]="guests" />
+                </label>
+                <label class="campo">
+                  <span>Duración (horas)</span>
+                  <input type="number" name="duracion" min="1" max="24" [(ngModel)]="durationHours" />
+                </label>
+                <label class="campo">
+                  <span>Fecha del evento</span>
+                  <input type="date" name="fecha" [(ngModel)]="eventDate" />
+                </label>
+                <label class="campo">
+                  <span>Hora de inicio</span>
+                  <input type="time" name="hora" [(ngModel)]="eventTime" />
+                </label>
+              </div>
+
+              @if (validacionPaso1) {
+                <p class="validacion">{{ validacionPaso1 }}</p>
+              }
+
+              <button class="btn btn-primario btn-block" type="button" (click)="siguienteDesdePaso1()">
+                Continuar a Elegir Cócteles
+                <span class="material-symbols-outlined">arrow_forward</span>
+              </button>
+            </section>
+          </div>
+
+          <aside class="estimacion">
+            <h3>Tu Estimación en Tiempo Real</h3>
+            <div class="filas">
+              <div class="fila">
+                <span>Tipo</span>
+                <strong>{{ nombreTipo()?.name ?? '—' }}</strong>
+              </div>
+              <div class="fila">
+                <span>Invitados</span>
+                <strong>{{ guests }}</strong>
+              </div>
+              <div class="fila">
+                <span>Duración</span>
+                <strong>{{ durationHours }} Horas</strong>
+              </div>
+              <div class="fila">
+                <span>Fecha</span>
+                <strong>{{ fechaLegible(eventDate) }}</strong>
+              </div>
+            </div>
+            <div class="total">
+              <span>Total Estimado</span>
+                <strong>{{ dinero(desglose().total) }}</strong>
+            </div>
+            <button class="btn btn-primario btn-block" type="button" (click)="siguienteDesdePaso1()">
+              Continuar a Elegir Cócteles
+              <span class="material-symbols-outlined">arrow_forward</span>
+            </button>
+          </aside>
+        </div>
+      }
+
+      @case (2) {
+        <!-- ============ Paso 2: selección de cócteles ============ -->
+        <div class="rejilla-paso2">
+          <aside class="filtros">
+            <div>
+              <h3>Buscar</h3>
+              <div class="buscador">
+                <span class="material-symbols-outlined">search</span>
+                <input type="text" placeholder="Ej. Martini..." name="busqueda"
+                  [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)" />
+              </div>
+            </div>
+            <div>
+              <h3>Categorías</h3>
+              <div class="categorias">
+                @for (cat of ['SIGNATURE', 'CLASICOS', 'CITRICOS', 'SIN_ALCOHOL']; track cat) {
+                  <label class="casilla">
+                    <input type="checkbox" [checked]="categoriaMarcada(cat)"
+                      (change)="alternarCategoria(cat)" />
+                    <span>{{ etiquetas[cat] }}</span>
+                  </label>
+                }
+              </div>
+            </div>
+          </aside>
+
+          <section class="catalogo">
+            <div class="banner">
+              <div class="banner-capas"></div>
+              <div class="banner-texto">
+                <div class="recomendado">
+                  <span class="material-symbols-outlined">star</span>
+                  <span>Recomendados para {{ nombreTipo()?.name ?? 'tu evento' }}</span>
+                </div>
+                <h2>Selección Exclusiva</h2>
+              </div>
+            </div>
+
+            <div class="rejilla-cocteles">
+              @for (coctel of visibles(); track coctel.id) {
+                <article class="tarjeta-coctel">
+                  <div class="imagen" [class.sin-imagen]="!coctel.imageUrl"
+                    [style.backgroundImage]="coctel.imageUrl ? 'url(' + coctel.imageUrl + ')' : ''">
+                    @if (!coctel.imageUrl) {
+                      <span class="material-symbols-outlined">local_bar</span>
+                    }
+                  </div>
+                  <div class="cuerpo">
+                    <div class="cabecera">
+                      <h4>{{ coctel.name }}</h4>
+                      <span class="categoria">{{ etiquetaCategoria(coctel.category) }}</span>
+                    </div>
+                    <p>{{ coctel.ingredients }}</p>
+                    <button class="btn-add" [class.activo]="seleccionado(coctel.id)" type="button"
+                      (click)="alternarCoctel(coctel.id)">
+                      <span class="material-symbols-outlined">
+                        {{ seleccionado(coctel.id) ? 'check' : 'add' }}
+                      </span>
+                      {{ seleccionado(coctel.id) ? 'Añadido' : 'Añadir' }}
+                    </button>
+                  </div>
+                </article>
+              } @empty {
+                <p class="estado">No hay cócteles que coincidan con los filtros.</p>
+              }
+            </div>
+
+            @if (validacionPaso2) {
+              <p class="validacion">{{ validacionPaso2 }}</p>
+            }
+          </section>
+
+          <aside class="carta-evento">
+            <h3>Carta del Evento</h3>
+            <p class="contador">{{ seleccionados().length }}/{{ cocktails().length }} Seleccionados</p>
+
+            <div class="lista-seleccion">
+              @for (coctel of seleccionados(); track coctel.id) {
+                <div class="item-seleccion">
+                  <div class="miniatura" [style.backgroundImage]="coctel.imageUrl ? 'url(' + coctel.imageUrl + ')' : ''">
+                    @if (!coctel.imageUrl) {
+                      <span class="material-symbols-outlined">local_bar</span>
+                    }
+                  </div>
+                  <h5>{{ coctel.name }}</h5>
+                  <button type="button" title="Quitar" (click)="alternarCoctel(coctel.id)">
+                    <span class="material-symbols-outlined">close</span>
+                  </button>
+                </div>
+              } @empty {
+                <p class="vacio">Aún no has elegido cócteles.</p>
+              }
+            </div>
+
+            <div class="pie-carta">
+              <button class="btn btn-primario btn-block" type="button" (click)="siguienteDesdePaso2()">
+                Ir al Resumen
+                <span class="material-symbols-outlined">arrow_forward</span>
+              </button>
+            </div>
+          </aside>
+        </div>
+      }
+
+      @case (3) {
+        <!-- ============ Paso 3: resumen y reserva ============ -->
+        <div class="rejilla-paso3">
+          <section class="datos-cliente">
+            <span class="etiqueta-sm">Paso 3 de 3</span>
+            <h1>Completa tus Datos de Reserva</h1>
+            <p class="intro">
+              Proporciona los detalles finales para asegurar tu experiencia. Nuestro equipo
+              se pondrá en contacto para afinar los detalles de coctelería.
+            </p>
+
+            <form class="formulario" (ngSubmit)="confirmar()">
+              <div class="campo-flotante">
+                <input id="nombre" name="nombre" type="text" placeholder=" " [(ngModel)]="nombre" />
+                <label for="nombre">Nombre Completo</label>
+              </div>
+
+              <div class="doble">
+                <div class="campo-flotante">
+                  <input id="whatsapp" name="whatsapp" type="tel" placeholder=" " [(ngModel)]="whatsapp" />
+                  <label for="whatsapp">WhatsApp (con código de país)</label>
+                </div>
+                <div class="campo-flotante">
+                  <input id="email" name="email" type="email" placeholder=" " [(ngModel)]="email" />
+                  <label for="email">Correo Electrónico</label>
+                </div>
+              </div>
+
+              <div class="campo-flotante">
+                <input id="ubicacion" name="ubicacion" type="text" placeholder=" " [(ngModel)]="ubicacion" />
+                <label for="ubicacion">Ubicación del Evento (Ciudad, Dirección)</label>
+              </div>
+
+              <div class="campo-flotante">
+                <textarea id="notas" name="notas" rows="3" placeholder=" " [(ngModel)]="notas"></textarea>
+                <label for="notas">Notas Especiales o Alergias (Opcional)</label>
+              </div>
+            </form>
+
+            <section class="nivel-servicio">
+              <h2 class="etiqueta-seccion">Nivel de Servicio</h2>
+              <div class="opciones-nivel">
+                <button class="opcion-nivel" [class.activa]="nivel === 'BASE'" type="button"
+                  (click)="nivel = 'BASE'">
+                  <span class="titulo">Base</span>
+                  <p>Bartender + coctelería base por hora e invitados.</p>
+                </button>
+                <button class="opcion-nivel" [class.activa]="nivel === 'PREMIUM'" type="button"
+                  (click)="nivel = 'PREMIUM'">
+                  <span class="titulo">Premium</span>
+                  <p>Carta ampliada de cócteles de autor e ingredientes premium.</p>
+                </button>
+              </div>
+
+              <label class="campo bartenders">
+                <span>Bartenders adicionales</span>
+                <input type="number" name="bartenders" min="0" max="20" [(ngModel)]="bartendersExtra" />
+              </label>
+            </section>
+          </section>
+
+          <section class="resumen-final">
+            <div class="tarjeta-resumen">
+              <h2>Resumen del Servicio</h2>
+
+              <div class="specs">
+                <div class="spec">
+                  <span class="material-symbols-outlined">calendar_today</span>
+                  <div>
+                    <span class="etiqueta">Fecha</span>
+                    <strong>{{ fechaLegible(eventDate) }}</strong>
+                  </div>
+                </div>
+                <div class="spec">
+                  <span class="material-symbols-outlined">group</span>
+                  <div>
+                    <span class="etiqueta">Invitados</span>
+                    <strong>{{ guests }} Personas</strong>
+                  </div>
+                </div>
+                <div class="spec">
+                  <span class="material-symbols-outlined">schedule</span>
+                  <div>
+                    <span class="etiqueta">Duración</span>
+                    <strong>{{ durationHours }} Horas</strong>
+                  </div>
+                </div>
+                <div class="spec">
+                  <span class="material-symbols-outlined">local_bar</span>
+                  <div>
+                    <span class="etiqueta">Nivel</span>
+                    <strong>{{ nivel === 'PREMIUM' ? 'Premium' : 'Base' }}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <hr />
+
+              <h3 class="subtitulo">Selección de Coctelería</h3>
+              <div class="lista-resumen">
+                @for (coctel of seleccionados(); track coctel.id) {
+                  <div class="item-resumen">
+                    <div class="miniatura" [style.backgroundImage]="coctel.imageUrl ? 'url(' + coctel.imageUrl + ')' : ''">
+                      @if (!coctel.imageUrl) {
+                        <span class="material-symbols-outlined">local_bar</span>
+                      }
+                    </div>
+                    <div>
+                      <h4>{{ coctel.name }}</h4>
+                      <p>{{ coctel.ingredients }}</p>
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <hr />
+
+              <div class="precios">
+                <div class="precio-fila">
+                  <span>Servicio Base ({{ durationHours }}hrs, {{ guests }} pax)</span>
+                  <span>{{ dinero(desglose().base) }}</span>
+                </div>
+                @if (desglose().premium > 0) {
+                  <div class="precio-fila">
+                    <span>Upgrade Menú Premium</span>
+                    <span>{{ dinero(desglose().premium) }}</span>
+                  </div>
+                }
+                @if (desglose().personal > 0) {
+                  <div class="precio-fila">
+                    <span>Personal Adicional ({{ bartendersExtra }}
+                      {{ bartendersExtra === 1 ? 'bartender' : 'bartenders' }})</span>
+                    <span>{{ dinero(desglose().personal) }}</span>
+                  </div>
+                }
+                <div class="precio-total">
+                  <span>Total Estimado</span>
+                  <strong>{{ dinero(desglose().total) }}</strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="acciones">
+              <button class="btn btn-primario btn-block" type="button" (click)="confirmar()"
+                [disabled]="enviando()">
+                <span class="material-symbols-outlined">send</span>
+                {{ enviando() ? 'Enviando...' : 'Confirmar Reserva' }}
+              </button>
+              <a class="btn btn-secundario btn-block" [href]="mailto()">
+                <span class="material-symbols-outlined">mail</span>
+                Solicitar Cotización por Email
+              </a>
+            </div>
+
+            @if (validacionPaso3) {
+              <p class="validacion">{{ validacionPaso3 }}</p>
+            }
+            @if (errorEnvio()) {
+              <p class="validacion">{{ errorEnvio() }}</p>
+            }
+
+            <p class="seguro">
+              <span class="material-symbols-outlined">lock</span>
+              Tus datos están protegidos y encriptados.
+            </p>
+
+            <button class="volver" type="button" (click)="regresarAPaso2()">
+              <span class="material-symbols-outlined">arrow_back</span>
+              Volver a la carta
+            </button>
+          </section>
+        </div>
+      }
+    }
+  </div>
+}

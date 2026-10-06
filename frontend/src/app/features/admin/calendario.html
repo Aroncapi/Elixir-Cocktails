@@ -1,0 +1,141 @@
+<div class="panel">
+  <!-- Barra lateral -->
+  <aside class="lateral" [class.abierto]="menuAbierto()">
+    <div class="lateral-cabecera">
+      <div class="avatar">
+        <img
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuBuXbaj93r6GZ0UQGFUfDd7Mj9zj7sQcU0e2le76JSvQpjMZVWp36-CtosvVMb1Zz4SXJVJDWwMDopB8Zc2CMc-6ntcGY8BsPaHFvk0aq_GjqMn0PcbsOdEvHA8QjRnHs3QkYRFKmTL5hNJ2w8oweDi2PNKvzdKJsPTPe2vKGgUqX7gIwJABnE-F621IS5NIz7OxekPphnBftX_VwkmM0nLjylzX0NWAY0mJvCl9JqBCbG_KukJNC8G"
+          alt="Perfil admin"
+        />
+      </div>
+      <h2>Velvet &amp; Gilt</h2>
+      <p>Admin Panel</p>
+    </div>
+
+    <ul class="lateral-menu">
+      <li><a class="item" routerLink="/panel/dashboard" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: true }"><span class="material-symbols-outlined">dashboard</span>Dashboard</a></li>
+      <li><a class="item" routerLink="/panel/solicitudes" routerLinkActive="activo"><span class="material-symbols-outlined">description</span>Solicitudes</a></li>
+      <li><a class="item" routerLink="/panel/calendario" routerLinkActive="activo"><span class="material-symbols-outlined">calendar_month</span>Calendario</a></li>
+      <li><a class="item" routerLink="/panel/clientes" routerLinkActive="activo"><span class="material-symbols-outlined">group</span>Clientes</a></li>
+      <li><a class="item" routerLink="/panel" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: true }"><span class="material-symbols-outlined">menu_book</span>Catálogo</a></li>
+      <li><a class="item" routerLink="/panel/configuracion" routerLinkActive="activo"><span class="material-symbols-outlined">settings</span>Configuración</a></li>
+    </ul>
+
+    <div class="lateral-pie">
+      <button class="nueva-reserva" type="button" routerLink="/cotizador">
+        Nueva Reserva
+      </button>
+      <button class="salir" type="button" (click)="cerrarSesion()">
+        <span class="material-symbols-outlined">logout</span>Cerrar Sesión
+      </button>
+    </div>
+  </aside>
+
+  @if (menuAbierto()) {
+    <div class="velo-menu" (click)="alternarMenu()"></div>
+  }
+
+  <!-- Cabecera superior -->
+  <header class="superior">
+    <div class="buscador">
+      <span class="material-symbols-outlined">search</span>
+      <input type="text" placeholder="Buscar folio, cliente o evento..." disabled />
+    </div>
+
+    <div class="superior-derecha">
+      <span class="icono-decorativo" aria-hidden="true">
+        <span class="material-symbols-outlined">notifications</span>
+      </span>
+      <span class="icono-decorativo" aria-hidden="true">
+        <span class="material-symbols-outlined">help</span>
+      </span>
+      <button class="boton-menu" type="button" (click)="alternarMenu()" aria-label="Menú">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Contenido -->
+  <main class="contenido">
+    <div class="encabezado">
+      <div class="encabezado-texto">
+        <h1>Calendario</h1>
+        <p>Eventos confirmados y pendientes del mes.</p>
+      </div>
+
+      <div class="segmentos">
+        @for (e of estados; track e) {
+          <button type="button" [class.activo]="estadoFiltro() === e" (click)="filtrarPorEstado(e)">
+            {{ e === '' ? 'Todos' : etiquetaEstado(e) }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <section class="calendario-tarjeta">
+      <div class="calendario-cabecera">
+        <button type="button" class="navegar" (click)="anterior()" aria-label="Mes anterior">
+          <span class="material-symbols-outlined">chevron_left</span>
+        </button>
+        <div class="mes-titulo">
+          <h2>{{ titulo() }}</h2>
+          <span class="contador">{{ totalEventos() }} evento(s)</span>
+        </div>
+        <button type="button" class="hoy" (click)="irAHoy()">Hoy</button>
+        <button type="button" class="navegar" (click)="siguiente()" aria-label="Mes siguiente">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </button>
+      </div>
+
+      @if (cargando()) {
+        <p class="estado">Cargando eventos...</p>
+      }
+
+      @if (error()) {
+        <p class="estado error">{{ error() }}</p>
+      }
+
+      <div class="rejilla-dias">
+        @for (d of dias; track d) {
+          <span class="etiqueta-dia">{{ d }}</span>
+        }
+      </div>
+
+      <div class="rejilla">
+        @for (dia of calendario(); track dia.fecha) {
+          <div class="celda" [class.vacia]="dia.numero === 0" [class.hoy]="dia.esHoy">
+            @if (dia.numero > 0) {
+              <span class="numero-dia">{{ dia.numero }}</span>
+              <div class="eventos">
+                @for (evento of dia.eventos; track evento.id) {
+                  <button
+                    type="button"
+                    class="evento"
+                    [class.pendiente]="evento.status === 'PENDIENTE'"
+                    [class.confirmado]="evento.status === 'CONFIRMADO'"
+                    [class.cancelado]="evento.status === 'CANCELADO'"
+                    (click)="verDetalle(evento)"
+                    title="{{ evento.folio }} — {{ evento.clientName }}"
+                  >
+                    <span class="evento-hora">{{ hora(evento) }}</span>
+                    <span class="evento-folio">{{ evento.folio }}</span>
+                    <span class="evento-cliente">{{ evento.clientName }}</span>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        } @empty {
+          <p class="estado-vacio">No hay dias en el mes.</p>
+        }
+      </div>
+
+      <div class="leyenda">
+        <span><i class="punto pendiente"></i> Pendiente</span>
+        <span><i class="punto confirmado"></i> Confirmado</span>
+        <span><i class="punto cancelado"></i> Cancelado</span>
+        <span class="nota">Haz clic en un evento para abrir su detalle.</span>
+      </div>
+    </section>
+  </main>
+</div>

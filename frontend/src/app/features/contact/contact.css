@@ -292,3 +292,21 @@
     padding: 64px;
   }
 }
+
+/* ---------- Aviso y nota del formulario ---------- */
+.aviso-error {
+  margin: 0;
+  padding: 10px 14px;
+  background: rgba(196, 64, 64, 0.18);
+  border: 1px solid rgba(196, 64, 64, 0.5);
+  border-radius: 8px;
+  color: #ffb4b4;
+  font-size: 14px;
+}
+
+.nota {
+  margin: -8px 0 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.55);
+  text-align: center;
+}

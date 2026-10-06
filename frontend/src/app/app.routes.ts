@@ -6,7 +6,12 @@ import { Contact } from './features/contact/contact';
 import { Login } from './features/login/login';
 import { CatalogAdmin } from './features/admin/catalog-admin';
 import { ClientsAdmin } from './features/admin/clients-admin';
-import { Placeholder } from './features/placeholder/placeholder';
+import { Quote } from './features/quote/quote';
+import { RequestsAdmin } from './features/admin/requests-admin';
+import { RequestDetail } from './features/admin/request-detail';
+import { Calendario } from './features/admin/calendario';
+import { Configuracion } from './features/admin/configuracion';
+import { Seguimiento } from './features/seguimiento/seguimiento';
 import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
@@ -25,6 +30,32 @@ export const routes: Routes = [
     component: ClientsAdmin,
     canActivate: [authGuard],
   },
-  { path: 'cotizador', component: Placeholder, data: { titulo: 'Cotizador' } },
+  {
+    path: 'panel/solicitudes',
+    component: RequestsAdmin,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'panel/dashboard',
+    component: RequestsAdmin,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'panel/calendario',
+    component: Calendario,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'panel/solicitudes/:id',
+    component: RequestDetail,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'panel/configuracion',
+    component: Configuracion,
+    canActivate: [authGuard],
+  },
+  { path: 'cotizador', component: Quote },
+  { path: 'solicitud/:token', component: Seguimiento },
   { path: '**', redirectTo: '' },
 ];

@@ -6,20 +6,20 @@
     <div class="formulario-caja">
       <h1>Hablemos de tu Próximo Evento</h1>
 
-      <form class="formulario">
+      <form class="formulario" (ngSubmit)="enviar()">
         <div class="campo">
           <label for="nombre">Nombre Completo</label>
-          <input id="nombre" type="text" placeholder="Ej. Ana de Armas" />
+          <input id="nombre" type="text" placeholder="Ej. Ana de Armas" [(ngModel)]="nombre" name="nombre" />
         </div>
 
         <div class="campo">
           <label for="email">Email Corporativo</label>
-          <input id="email" type="email" placeholder="ana@empresa.com" />
+          <input id="email" type="email" placeholder="ana@empresa.com" [(ngModel)]="email" name="email" />
         </div>
 
         <div class="campo">
           <label for="fecha">Fecha del Evento</label>
-          <input id="fecha" type="date" />
+          <input id="fecha" type="date" [(ngModel)]="fecha" name="fecha" />
         </div>
 
         <div class="campo">
@@ -28,10 +28,17 @@
             id="mensaje"
             rows="4"
             placeholder="Cuéntanos sobre el número de invitados y el tipo de servicio que buscas..."
+            [(ngModel)]="mensaje"
+            name="mensaje"
           ></textarea>
         </div>
 
-        <button class="enviar" type="button">Solicitar Presupuesto</button>
+        @if (error()) {
+          <p class="aviso-error">{{ error() }}</p>
+        }
+
+        <button class="enviar" type="submit">Solicitar Presupuesto</button>
+        <p class="nota">Se abre WhatsApp con tu mensaje listo para enviar.</p>
       </form>
     </div>
   </section>
@@ -60,7 +67,7 @@
               <span class="material-symbols-outlined">mail</span>
               <div>
                 <strong>Email</strong>
-                <a href="mailto:concierge@velvetgilt.com">concierge@velvetgilt.com</a>
+                <a [href]="'mailto:' + settings.contactoEmail()">{{ settings.contactoEmail() }}</a>
               </div>
             </li>
 
@@ -68,7 +75,7 @@
               <span class="material-symbols-outlined">forum</span>
               <div>
                 <strong>WhatsApp Business</strong>
-                <a href="#">+52 55 1234 5678</a>
+                <a [href]="'https://wa.me/' + settings.whatsappDueno().replace(/[^0-9]/g, '')" target="_blank" rel="noopener">{{ settings.whatsappDueno() }}</a>
               </div>
             </li>
           </ul>

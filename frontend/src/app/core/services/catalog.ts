@@ -12,8 +12,12 @@ export class CatalogService {
   }
 
   getEventTypes() {
-    return this.http.get<{ id: number; code: string; name: string }[]>(
-      '/api/public/event-types'
-    );
+    return this.http.get<{
+      id: number;
+      code: string;
+      name: string;
+      description: string;
+      active: boolean;
+    }[]>('/api/public/event-types');
   }
 }

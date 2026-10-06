@@ -89,6 +89,12 @@
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+  color: #8e9192;
+}
+
+.item:hover:not(.activo) {
+  background: #2e353f;
+  color: var(--texto);
 }
 
 .item .material-symbols-outlined {

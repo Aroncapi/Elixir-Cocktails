@@ -1,0 +1,254 @@
+<div class="panel">
+  <!-- Barra lateral -->
+  <aside class="lateral" [class.abierto]="menuAbierto()">
+    <div class="lateral-cabecera">
+      <div class="avatar">
+        <img
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuBuXbaj93r6GZ0UQGFUfDd7Mj9zj7sQcU0e2le76JSvQpjMZVWp36-CtosvVMb1Zz4SXJVJDWwMDopB8Zc2CMc-6ntcGY8BsPaHFvk0aq_GjqMn0PcbsOdEvHA8QjRnHs3QkYRFKmTL5hNJ2w8oweDi2PNKvzdKJsPTPe2vKGgUqX7gIwJABnE-F621IS5NIz7OxekPphnBftX_VwkmM0nLjylzX0NWAY0mJvCl9JqBCbG_KukJNC8G"
+          alt="Perfil admin"
+        />
+      </div>
+      <h2>Velvet &amp; Gilt</h2>
+      <p>Admin Panel</p>
+    </div>
+
+    <ul class="lateral-menu">
+      <li><a class="item" routerLink="/panel/dashboard" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: true }"><span class="material-symbols-outlined">dashboard</span>Dashboard</a></li>
+      <li><a class="item" routerLink="/panel/solicitudes" routerLinkActive="activo"><span class="material-symbols-outlined">description</span>Solicitudes</a></li>
+      <li><a class="item" routerLink="/panel/calendario" routerLinkActive="activo"><span class="material-symbols-outlined">calendar_month</span>Calendario</a></li>
+      <li><a class="item" routerLink="/panel/clientes" routerLinkActive="activo"><span class="material-symbols-outlined">group</span>Clientes</a></li>
+      <li><a class="item" routerLink="/panel" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: true }"><span class="material-symbols-outlined">menu_book</span>Catálogo</a></li>
+      <li><a class="item" routerLink="/panel/configuracion" routerLinkActive="activo"><span class="material-symbols-outlined">settings</span>Configuración</a></li>
+    </ul>
+
+    <div class="lateral-pie">
+      <button class="nueva-reserva" type="button" routerLink="/cotizador">
+        Nueva Reserva
+      </button>
+      <button class="salir" type="button" (click)="cerrarSesion()">
+        <span class="material-symbols-outlined">logout</span>Cerrar Sesión
+      </button>
+    </div>
+  </aside>
+
+  @if (menuAbierto()) {
+    <div class="velo-menu" (click)="alternarMenu()"></div>
+  }
+
+  <!-- Cabecera superior -->
+  <header class="superior">
+    <div class="buscador">
+      <span class="material-symbols-outlined">search</span>
+      <input type="text" placeholder="Buscar..." />
+    </div>
+
+    <div class="superior-derecha">
+      <span class="icono-decorativo" aria-hidden="true">
+        <span class="material-symbols-outlined">notifications</span>
+      </span>
+      <span class="icono-decorativo" aria-hidden="true">
+        <span class="material-symbols-outlined">help</span>
+      </span>
+      <button class="boton-menu" type="button" (click)="alternarMenu()" aria-label="Menú">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Contenido -->
+  <main class="contenido">
+    @if (cargando()) {
+      <p class="estado">Cargando solicitud...</p>
+    }
+
+    @if (error()) {
+      <p class="estado error">{{ error() }}</p>
+    }
+
+    @if (solicitud(); as s) {
+      <div class="detalle-cabecera">
+        <div class="detalle-titulo">
+          <a class="volver" routerLink="/panel/solicitudes" aria-label="Volver a solicitudes">
+            <span class="material-symbols-outlined">arrow_back</span>
+          </a>
+          <div>
+            <h1>Solicitud <span class="detalle-folio">#{{ s.folio }}</span></h1>
+            <div class="detalle-estado">
+              <span
+                class="badge"
+                [class.pendiente]="s.status === 'PENDIENTE'"
+                [class.confirmado]="s.status === 'CONFIRMADO'"
+                [class.cancelado]="s.status === 'CANCELADO'"
+              >
+                {{ etiquetaEstado(s.status) }}
+              </span>
+              <span class="creado">Creada el {{ fechaLarga(s.createdAt.slice(0, 10)) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detalle-acciones">
+          <button class="accion" type="button" (click)="alternarCambioEstado()">
+            <span class="material-symbols-outlined">sync_alt</span>
+            Cambiar Estado
+          </button>
+          <button class="accion" type="button" (click)="descargarPdf()" [disabled]="pdfGenerando()">
+            <span class="material-symbols-outlined">picture_as_pdf</span>
+            {{ pdfGenerando() ? 'Generando…' : 'Descargar PDF' }}
+          </button>
+            <button class="accion primaria" type="button" (click)="abrirWhatsApp()" [disabled]="!tieneWhatsapp()">
+              <span class="material-symbols-outlined">chat</span>
+              Enviar WhatsApp
+            </button>
+        </div>
+      </div>
+
+      @if (cambioEstado()) {
+        <div class="cambio-estado">
+          <span class="cambio-estado-texto">Cambiar estado a:</span>
+          <div class="segmentos">
+            @for (e of estados; track e) {
+              <button
+                type="button"
+                [class.activo]="s.status === e"
+                [disabled]="guardando()"
+                (click)="cambiarEstado(e)"
+              >
+                {{ etiquetaEstado(e) }}
+              </button>
+            }
+          </div>
+          <button class="cerrar-estado" type="button" (click)="alternarCambioEstado()">Cerrar</button>
+        </div>
+      }
+
+      <div class="rejilla">
+        <div class="columna">
+          <section class="tarjeta">
+            <h3 class="tarjeta-titulo">
+              <span class="material-symbols-outlined">person</span>
+              Información del Cliente
+            </h3>
+            <dl class="pares">
+              <div>
+                <dt>Nombre Completo</dt>
+                <dd>{{ s.client.name }}</dd>
+              </div>
+              <div>
+                <dt>Email</dt>
+                <dd>{{ s.client.email || '—' }}</dd>
+              </div>
+              <div>
+                <dt>WhatsApp</dt>
+                <dd>{{ s.client.whatsapp || '—' }}</dd>
+              </div>
+            </dl>
+          </section>
+
+          <section class="tarjeta">
+            <h3 class="tarjeta-titulo">
+              <span class="material-symbols-outlined">event</span>
+              Detalles del Evento
+            </h3>
+            <dl class="pares">
+              <div>
+                <dt>Tipo de Evento</dt>
+                <dd>{{ s.eventTypeName }}</dd>
+              </div>
+              <div>
+                <dt>Fecha y Hora</dt>
+                <dd>{{ fechaHora() }}</dd>
+              </div>
+              <div class="duo">
+                <div>
+                  <dt>Invitados</dt>
+                  <dd>{{ s.guests }} personas</dd>
+                </div>
+                <div>
+                  <dt>Duración</dt>
+                  <dd>{{ s.durationHours }} horas</dd>
+                </div>
+              </div>
+              <div>
+                <dt>Ubicación</dt>
+                <dd>{{ s.location || '—' }}</dd>
+              </div>
+              <div>
+                <dt>Nivel</dt>
+                <dd>
+                  {{ nivelTexto() }}
+                  @if (s.extraBartenders > 0) {
+                    · {{ s.extraBartenders }} bartender(s) extra
+                  }
+                </dd>
+              </div>
+              @if (s.notes) {
+                <div>
+                  <dt>Notas / Alergias</dt>
+                  <dd>{{ s.notes }}</dd>
+                </div>
+              }
+            </dl>
+          </section>
+        </div>
+
+        <div class="columna ancha">
+          <section class="tarjeta">
+            <h3 class="tarjeta-titulo">
+              <span class="material-symbols-outlined">local_bar</span>
+              Menú Seleccionado
+            </h3>
+            <div class="menu">
+              @for (c of s.cocktails; track c.id) {
+                <article class="menu-item">
+                  @if (c.imageUrl) {
+                    <img [src]="c.imageUrl" [alt]="c.name" />
+                  } @else {
+                    <div class="menu-sin-foto">
+                      <span class="material-symbols-outlined">local_bar</span>
+                    </div>
+                  }
+                  <div>
+                    <h4>{{ c.name }}</h4>
+                    <p>{{ c.ingredients }}</p>
+                  </div>
+                </article>
+              } @empty {
+                <p class="vacio">Sin cocteles seleccionados.</p>
+              }
+            </div>
+          </section>
+
+          <section class="tarjeta">
+            <h3 class="tarjeta-titulo">
+              <span class="material-symbols-outlined">receipt_long</span>
+              Desglose Financiero
+            </h3>
+            <div class="desglose">
+              <div class="linea">
+                <span>Servicio Base ({{ s.durationHours }} horas)</span>
+                <strong>{{ dinero(s.breakdown.base) }}</strong>
+              </div>
+              @if (s.breakdown.premium > 0) {
+                <div class="linea">
+                  <span>Menu Premium ({{ s.guests }} pax)</span>
+                  <strong>{{ dinero(s.breakdown.premium) }}</strong>
+                </div>
+              }
+              @if (s.breakdown.personal > 0) {
+                <div class="linea">
+                  <span>Personal Adicional ({{ s.extraBartenders }} Bartenders)</span>
+                  <strong>{{ dinero(s.breakdown.personal) }}</strong>
+                </div>
+              }
+              <div class="linea total">
+                <span>Total Estimado</span>
+                <strong>{{ dinero(s.breakdown.total) }}</strong>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    }
+  </main>
+</div>

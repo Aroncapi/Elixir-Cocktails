@@ -1,0 +1,133 @@
+<main class="seguimiento">
+  @if (cargando()) {
+    <p class="estado">Cargando tu solicitud...</p>
+  }
+
+  @if (error()) {
+    <section class="aviso">
+      <span class="material-symbols-outlined">search_off</span>
+      <h1>Solicitud no encontrada</h1>
+      <p>{{ error() }}</p>
+      <div class="acciones">
+        <a class="btn btn-primario" routerLink="/cotizador">Crear una solicitud</a>
+        <a class="btn btn-secundario" routerLink="/">Volver al inicio</a>
+      </div>
+    </section>
+  }
+
+  @if (solicitud(); as s) {
+    <header class="encabezado">
+      <span class="etiqueta-sm">Seguimiento de solicitud</span>
+      <h1>Solicitud <span class="folio">#{{ s.folio }}</span></h1>
+      <div class="estado-fila">
+        <span
+          class="badge"
+          [class.pendiente]="s.status === 'PENDIENTE'"
+          [class.confirmado]="s.status === 'CONFIRMADO'"
+          [class.cancelado]="s.status === 'CANCELADO'"
+        >
+          {{ etiquetaEstado(s.status) }}
+        </span>
+        <p>{{ resumenEstado() }}</p>
+      </div>
+    </header>
+
+    <div class="rejilla">
+      <section class="tarjeta">
+        <h2><span class="material-symbols-outlined">event</span> Detalles del Evento</h2>
+        <dl>
+          <div>
+            <dt>Tipo de evento</dt>
+            <dd>{{ s.eventTypeName }}</dd>
+          </div>
+          <div>
+            <dt>Fecha</dt>
+            <dd>{{ fechaLegible(s.eventDate) }}@if (s.eventTime) { · {{ s.eventTime }}}</dd>
+          </div>
+          <div>
+            <dt>Invitados</dt>
+            <dd>{{ s.guests }} personas · {{ s.durationHours }} horas</dd>
+          </div>
+          <div>
+            <dt>Ubicación</dt>
+            <dd>{{ s.location || 'Por definir' }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="tarjeta">
+        <h2><span class="material-symbols-outlined">person</span> Datos Registrados</h2>
+        <dl>
+          <div>
+            <dt>Nombre</dt>
+            <dd>{{ s.client.name }}</dd>
+          </div>
+          <div>
+            <dt>Correo</dt>
+            <dd>{{ s.client.email || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Servicio</dt>
+            <dd>{{ s.level === 'PREMIUM' ? 'Mixología Premium' : 'Mixología Base' }}</dd>
+          </div>
+          <div>
+            <dt>Bartenders extra</dt>
+            <dd>{{ s.extraBartenders }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="tarjeta ancho">
+        <h2><span class="material-symbols-outlined">local_bar</span> Carta del Evento</h2>
+        <ul class="carta">
+          @for (c of s.cocktails; track c.id) {
+            <li>
+              <strong>{{ c.name }}</strong>
+              <span>{{ c.ingredients }}</span>
+            </li>
+          } @empty {
+            <li class="vacio">Sin cócteles registrados.</li>
+          }
+        </ul>
+      </section>
+
+      <section class="tarjeta ancho">
+        <h2><span class="material-symbols-outlined">receipt_long</span> Desglose</h2>
+        <div class="desglose">
+          <div class="linea">
+            <span>Servicio Base ({{ s.durationHours }} horas)</span>
+            <strong>{{ dinero(s.breakdown.base) }}</strong>
+          </div>
+          @if (s.breakdown.premium > 0) {
+            <div class="linea">
+              <span>Menú Premium ({{ s.guests }} pax)</span>
+              <strong>{{ dinero(s.breakdown.premium) }}</strong>
+            </div>
+          }
+          @if (s.breakdown.personal > 0) {
+            <div class="linea">
+              <span>Personal Adicional ({{ s.extraBartenders }} Bartenders)</span>
+              <strong>{{ dinero(s.breakdown.personal) }}</strong>
+            </div>
+          }
+          <div class="linea total">
+            <span>Total Estimado</span>
+            <strong>{{ dinero(s.breakdown.total) }}</strong>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="acciones">
+      <a class="btn btn-primario" [href]="whatsappLink()" target="_blank" rel="noopener">
+        <span class="material-symbols-outlined">chat</span>
+        Enviar mi paquete por WhatsApp
+      </a>
+      <a class="btn btn-secundario" [href]="pdfLink()" download>
+        <span class="material-symbols-outlined">download</span>
+        Descargar resumen
+      </a>
+      <a class="btn btn-secundario" routerLink="/">Volver al inicio</a>
+    </div>
+  }
+</main>

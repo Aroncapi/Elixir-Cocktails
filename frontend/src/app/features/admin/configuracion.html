@@ -1,0 +1,106 @@
+<div class="panel">
+  <!-- Barra lateral -->
+  <aside class="lateral" [class.abierto]="menuAbierto()">
+    <div class="lateral-cabecera">
+      <div class="avatar">
+        <img
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuBuXbaj93r6GZ0UQGFUfDd7Mj9zj7sQcU0e2le76JSvQpjMZVWp36-CtosvVMb1Zz4SXJVJDWwMDopB8Zc2CMc-6ntcGY8BsPaHFvk0aq_GjqMn0PcbsOdEvHA8QjRnHs3QkYRFKmTL5hNJ2w8oweDi2PNKvzdKJsPTPe2vKGgUqX7gIwJABnE-F621IS5NIz7OxekPphnBftX_VwkmM0nLjylzX0NWAY0mJvCl9JqBCbG_KukJNC8G"
+          alt="Perfil admin"
+        />
+      </div>
+      <h2>Velvet &amp; Gilt</h2>
+      <p>Admin Panel</p>
+    </div>
+
+    <ul class="lateral-menu">
+      <li><a class="item" routerLink="/panel/dashboard" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: true }"><span class="material-symbols-outlined">dashboard</span>Dashboard</a></li>
+      <li><a class="item" routerLink="/panel/solicitudes" routerLinkActive="activo"><span class="material-symbols-outlined">description</span>Solicitudes</a></li>
+      <li><a class="item" routerLink="/panel/calendario" routerLinkActive="activo"><span class="material-symbols-outlined">calendar_month</span>Calendario</a></li>
+      <li><a class="item" routerLink="/panel/clientes" routerLinkActive="activo"><span class="material-symbols-outlined">group</span>Clientes</a></li>
+      <li><a class="item" routerLink="/panel" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: true }"><span class="material-symbols-outlined">menu_book</span>Catálogo</a></li>
+      <li><a class="item" routerLink="/panel/configuracion" routerLinkActive="activo"><span class="material-symbols-outlined">settings</span>Configuración</a></li>
+    </ul>
+
+    <div class="lateral-pie">
+      <button class="nueva-reserva" type="button" routerLink="/cotizador">
+        Nueva Reserva
+      </button>
+      <button class="salir" type="button" (click)="cerrarSesion()">
+        <span class="material-symbols-outlined">logout</span>Cerrar Sesión
+      </button>
+    </div>
+  </aside>
+
+  @if (menuAbierto()) {
+    <div class="velo-menu" (click)="alternarMenu()"></div>
+  }
+
+  <!-- Cabecera superior -->
+  <header class="superior">
+    <div class="buscador">
+      <span class="material-symbols-outlined">settings</span>
+      <input type="text" placeholder="Configuración del negocio" disabled />
+    </div>
+
+    <div class="superior-derecha">
+      <button class="boton-menu" type="button" (click)="alternarMenu()" aria-label="Menú">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Contenido -->
+  <main class="contenido">
+    <div class="encabezado">
+      <div class="encabezado-texto">
+        <h1>Configuración</h1>
+        <p>Datos que usan el sitio público, el cotizador y los botones de WhatsApp.</p>
+      </div>
+    </div>
+
+    <section class="tarjeta-ajuste">
+      <h2>
+        <span class="material-symbols-outlined">forum</span>
+        WhatsApp del negocio
+      </h2>
+      <p class="ayuda">
+        Aquí llegan los paquetes que los clientes generan en el cotizador y en la página de
+        seguimiento. Se usa en el botón "Enviar mi paquete por WhatsApp" y en Contacto.
+      </p>
+
+      <div class="campo-ajuste">
+        <label for="whatsapp">Número con prefijo de país</label>
+        <input
+          id="whatsapp"
+          type="tel"
+          placeholder="+51 937 336 603"
+          [(ngModel)]="whatsapp"
+        />
+        <span class="ayuda">Ejemplo: <code>{{ vistaPrevia() }}</code></span>
+      </div>
+
+      <div class="campo-ajuste">
+        <label for="nombreNegocio">Nombre del negocio</label>
+        <input id="nombreNegocio" type="text" maxlength="80" [(ngModel)]="businessName" />
+      </div>
+
+      <div class="campo-ajuste">
+        <label for="contactEmail">Correo de contacto</label>
+        <input id="contactEmail" type="email" maxlength="150" [(ngModel)]="contactEmail" />
+      </div>
+
+      @if (error()) {
+        <p class="aviso error">{{ error() }}</p>
+      }
+      @if (guardado()) {
+        <p class="aviso ok">Configuración guardada. Los botones ya usan este número.</p>
+      }
+
+      <div class="acciones-ajuste">
+        <button class="btn btn-primario" type="button" (click)="guardar()" [disabled]="guardando()">
+          {{ guardando() ? 'Guardando...' : 'Guardar cambios' }}
+        </button>
+      </div>
+    </section>
+  </main>
+</div>

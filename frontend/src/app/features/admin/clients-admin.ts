@@ -1,6 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { Cliente } from '../../core/models/client';
 import { AdminClientsService, ClientePayload } from '../../core/services/admin-clients';
 import { AuthService } from '../../core/services/auth';
@@ -14,7 +14,7 @@ const ETIQUETAS_TIER: Record<string, string> = {
 const POR_PAGINA = 10;
 
 @Component({
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, RouterLinkActive],
   selector: 'app-clients-admin',
   styleUrl: './clients-admin.css',
   templateUrl: './clients-admin.html',

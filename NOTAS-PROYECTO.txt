@@ -4,9 +4,9 @@ PROYECTO: VELVET & GILT - Plataforma de servicios de mixologia para eventos
 Arquitectura: Microservicios (Spring Cloud) + Angular
 Ubicacion:    C:\Users\AROM\Projects\bar-events
 Nota maestra: LEER ESTA NOTA ANTES DE TOCAR CUALQUIER COSA
-Ultima actualizacion: 05/10/2026 - SESION 4 CERRADA (commit+push de los 111
-archivos, FASE 3 CLIENTES completa: backend + pantalla /panel/clientes).
-SIGUIENTE: leer bloque 0.4 HANDOFF (sesion 5) y bloque 0.5 (detalle fase 3)
+Ultima actualizacion: 05/10/2026 - SESION 6 CERRADA (SIN COMMIT): fases 4, 5
+y 6 completas, paginacion server-side, calendario y tests verdes.
+Ver 0.7 (detalle sesion 6), 0.6 (sesion 5) y 0.4 (handoff sesion 7).
 ================================================================================
 
 --------------------------------------------------------------------------------
@@ -253,8 +253,26 @@ PENDIENTE #1 - EUREKA SERVER NO ARRANCA -> RESUELTO (sesion 2, fix aplicado)
       mvn spring-boot:run "-Dspring-boot.run.arguments=--debug"
 
 --------------------------------------------------------------------------------
-0.4 HANDOFF - COMO CONTINUAR LA SESION 5 (LEER PRIMERO)
+0.4 HANDOFF - COMO CONTINUAR LA SESION 7 (LEER PRIMERO)
 --------------------------------------------------------------------------------
+
+QUE SE HIZO EN LA SESION 6 (esta; SIN COMMITEAR; ver bloque 0.7):
+  - Paginacion server-side en /api/requests (JPQL + Page), /resumen y
+    /eventos; el dashboard ya no carga toda la tabla
+  - Transiciones de estado validadas (409 Conflict) + mensaje en la UI
+  - /panel/calendario (rejilla mensual)  -> FASE 4 CERRADA
+  - FASE 6: notification-service completo (V1 notifications, entity/DTO/
+    service/controller, seguridad con header del gateway, sender CONSOLA
+    y SMTP) + integracion core-service -> notificaciones
+  - Boton "Enviar paquete por WhatsApp" en el admin (mensaje armado con
+    los datos del cliente: ver core/utils/whatsapp.ts)
+  - Tests: core 4, notification 5, frontend 14 (ng test)
+
+QUE SE HIZO EN LA SESION 5 (fases 4 y 5; ver bloque 0.6):
+  - Backend de solicitudes (V7/V8, folio REQ-xxx, token, desglose, estados)
+  - Cotizador 3 pasos + confirmacion + /panel/solicitudes + detalle + PDF
+  - /solicitud/{token} publico con PDF  -> FASE 5 CERRADA
+  - Verificado end-to-end contra MySQL (POST, PDF, estados, clientes)
 
 QUE SE HIZO EN LA SESION 4 (backend + frontend de clientes, todo commiteado):
   - Commit f93af3b con los 111 archivos pendientes + push a origin/main
@@ -274,16 +292,15 @@ QUE SE HIZO EN LA SESION 3 (frontend):
   - angular.json: anyComponentStyle en 16kB warn / 32kB error
   - DB restaurada a los 8 seeds de cocteles (borre residuos de tests)
 
-GIT - OJO (actualizado sesion 4):
-  - ULTIMO COMMIT: f93af3b "Fase 1-2: auth+JWT, catalogo, gateway y frontend
-    Angular" (111 archivos) y YA ESTA EN EL REMOTO (push hecho: cf5f9c8..f93af3b).
-  - El arbol esta LIMPIO. Commitear/pushear ahora SI esta permitido (el bloqueo
-    era de la sesion 2); aun asi, preguntar antes de hacer push si no lo piden.
+GIT - OJO (actualizado sesion 6):
+  - ULTIMO COMMIT: f93af3b (ya esta en origin/main).
+  - EL ARBOL NO ESTA LIMPIO: todo lo de las sesiones 5 y 6 esta SIN
+    COMMITEAR (frontend, core-service, notification-service, la nota).
+    Preguntar antes de commit/push: es lo primero que hay que cerrar.
   - Ver: git status -uall   |   git log --oneline
 
-PROCESOS (al cerrar la sesion 4 estaban arriba: 3306, 4200, 8080-8082, 8761
-(notification-service NO estaba; solo hace falta en la fase 6; si faltan,
- levantar en este orden):
+PROCESOS (al cerrar la sesion 6 estaban arriba: 3306, 4200, 8082, 8083;
+si faltan, levantar en este orden):
   MySQL      docker compose up -d                                    (healthy)
   Eureka     mvn.cmd spring-boot:run -f eureka-server\pom.xml        :8761
   Auth       mvn.cmd spring-boot:run -f auth-service\pom.xml         :8081
@@ -292,52 +309,70 @@ PROCESOS (al cerrar la sesion 4 estaban arriba: 3306, 4200, 8080-8082, 8761
   Gateway    mvn.cmd spring-boot:run -f gateway-service\pom.xml      :8080
   Frontend   cd frontend && ng serve                                 :4200
   Maven: C:\Users\AROM\Tools\apache-maven-3.9.16\bin\mvn.cmd
+  OJO: arrancar con -WindowStyle Hidden si no se quiere la ventana cmd
   Logs: *.log en la raiz (.gitignore)
 
 CREDENCIALES DE PRUEBA:
   admin@velvetgilt.com / admin123   (seed de auth-service)
   DB: barpro/barpro  (root: root)  bases auth_db / core_db / notif_db
 
-COMO VERIFICAR QUE TODO VIVE (PowerShell, 30 segundos):
-  ruta:  Invoke-WebRequest http://localhost:4200/panel -UseBasicParsing
-  rutas: /panel  y  /panel/clientes  (ambas deben dar 200)
-  login: $t=(Invoke-RestMethod -Method Post -Uri http://localhost:4200/api/auth/login
-         -ContentType 'application/json'
-         -Body '{"email":"admin@velvetgilt.com","password":"admin123"}').token
-  admin: Invoke-RestMethod http://localhost:4200/api/cocktails -Headers @{Authorization="Bearer $t"}
-         (sin token debe dar 401)
-  clientes: Invoke-RestMethod http://localhost:4200/api/clients -Headers @{Authorization="Bearer $t"}
-         (debe devolver 3: Elena/Arch/David)
-  build: cd frontend && ng build   (debe salir SIN warnings)
+COMO VERIFICAR QUE TODO VIVE (PowerShell, ~1 minuto):
+  rutas:   /panel  /panel/clientes  /panel/solicitudes  /panel/calendario
+           (las 4 deben dar 200 en http://localhost:4200)
+  login:   $t=(Invoke-RestMethod -Method Post -Uri http://localhost:4200/api/auth/login
+           -ContentType 'application/json'
+           -Body '{"email":"admin@velvetgilt.com","password":"admin123"}').token
+  admin:   Invoke-RestMethod http://localhost:4200/api/cocktails -Headers @{Authorization="Bearer $t"}
+           (sin token debe dar 401)
+  pagina:  Invoke-RestMethod "http://localhost:4200/api/requests?page=0&size=10" `
+             -Headers @{Authorization="Bearer $t"}
+           -> {items, total, page, size, totalPages}
+  resumen: .../api/requests/resumen   -> {solicitudes, ingresosEstimados, ...}
+  eventos: .../api/requests/eventos?desde=2026-10-01&hasta=2026-10-31
+  notif:   POST http://localhost:4200/api/public/solicitudes crea y dispara
+           NOTIF de core -> :8083; verlas con
+           Invoke-RestMethod http://localhost:8083/api/notifications `
+             -Headers @{'X-User-Email'='admin@velvet.mx';'X-User-Role'='ADMIN'}
+  PDF:     http://localhost:4200/api/public/solicitudes/{token}/pdf -> application/pdf
+  build:   cd frontend && ng build    (SIN warnings)
+  tests:   cd frontend && ng test     (9 archivos / 14 tests)
+           mvn.cmd -q test -f core-service\pom.xml          (4 tests)
+           mvn.cmd -q test -f notification-service\pom.xml  (5 tests)
 
 ESTADO DEL FRONTEND (estructura ya creada, seguirla):
   frontend/src/app/
     app.ts|html|css    nav publica; se OCULTA dentro de /panel (enPanel())
-    app.routes.ts      '' Home | /catalogo | /servicios | /contacto | /login
-                       | /panel (CatalogAdmin + canActivate)
-                       | /panel/clientes (ClientsAdmin + canActivate)
-                       | /cotizador (Placeholder, el unico que queda)
+    app.routes.ts      '' | /catalogo | /servicios | /contacto | /login
+                       | /panel (CatalogAdmin) | /panel/clientes
+                       | /panel/solicitudes  | /panel/dashboard (alias)
+                       | /panel/calendario   | /panel/solicitudes/:id
+                       | /cotizador          | /solicitud/:token (publico)
+                       | ** -> Home  (Placeholder quedo FUERA de rutas)
     app.config.ts      provideHttpClient(withInterceptors([authInterceptor]))
-    core/services/     catalog.ts (publico), auth.ts (sesion, signals,
-                       localStorage velvet_token/velvet_usuario),
-                       admin-catalog.ts (CRUD /api/cocktails + event-types),
-                       admin-clients.ts (CRUD /api/clients)
+    core/services/     catalog.ts (publico), solicitudes.ts (publico),
+                       auth.ts, admin-catalog.ts, admin-clients.ts,
+                       admin-requests.ts (page/resumen/eventos/get/update)
+    core/utils/whatsapp.ts   mensajePaquete() + enlaceWhatsapp() compartidos
     core/guards/auth.guard.ts              redirige a /login si no hay token
     core/interceptors/auth.interceptor.ts  agrega Authorization: Bearer
-    core/models/       cocktail.ts, usuario.ts, client.ts (Cliente)
-    features/          home, catalog, services, contact, login,
-                       admin/catalog-admin (/panel), admin/clients-admin
-                       (/panel/clientes), placeholder (solo queda /cotizador)
+    features/          home, catalog, services, contact, login, quote,
+                       seguimiento, admin/catalog-admin, admin/clients-admin,
+                       admin/requests-admin (dashboard+tabla),
+                       admin/request-detail, admin/calendario,
+                       placeholder (codigo muerto, su spec sigue pasando)
   PATRONES A SEGUIR: archivos sin ".component" (services.ts/services.html),
   clases en ingles (Home, Services, Contact, Login, CatalogAdmin),
   @if / @for (no *ngIf/*ngFor), signals + inject(), FormsModule + ngModel
   en formularios, CSS por componente con los tokens de styles.css.
 
 SIGUIENTE PASO - DECISION PENDIENTE DEL USUARIO (preguntar al arrancar):
-  a) Fase 4: cotizador 3 pasos (wireframes paso_1/2/3 + confirmacion +
-     backend de solicitudes con folio #REQ-xxx, desglose y dashboard admin)
-     <- ahora es lo recomendado: el admin (fases 2 y 3) ya quedo completo
-  b) Fase 5: link publico por token + PDF  (o Fase 6: notification-service)
+  a) COMMIT + PUSH de todo lo de las sesiones 5 y 6 (recomendado primero;
+     ya hay tests verdes que respaldan el cambio)
+  b) RabbitMQ + sender automatico de WhatsApp (Evolution API o Cloud API)
+     para que las cotizaciones nuevas te lleguen solas a tu numero
+  c) Fase 7: despliegue en la nube (URL publica para compartir links)
+  d) Pendientes chicos: Configuracion en el sidebar sigue sin pantalla,
+     paginacion server-side de clientes, foto hero offline
 
 METODO PARA REPRODUCIR UNA PANTALLA WIREFRAME (ya usado 4 veces):
   1. Leer <pantalla>\screen.png  -> ver el diseno
@@ -369,10 +404,13 @@ DETALLES QUE SUELEN TRABAR (descubiertos en la sesion 3):
     SIN_ALCOHOL. Roles: ADMIN, STAFF.
 
 PENDIENTES DE BACKEND AUN:
-  - notification-service: VACIO (solo scaffolding)
-  - core-service: sin Request/solicitudes (fase 4)
-  - service_tiers.price en NULL: definir precios en la fase 4
-  - No hay tests unitarios escritos en ningun servicio
+  - RabbitMQ: hoy core -> notificacion es HTTP sincrono (post-commit, con
+    timeout 2s y fallback a log); con cola seria async + reintentos
+  - Sender de WhatsApp real: el canal WHATSAPP existe pero no hay
+    transportador (Evolution API o WhatsApp Cloud API); hoy todo sale por
+    CONSOLA (solo imprime) o SMTP si se define spring.mail.host
+  - Correos reales: configurar spring.mail.* en notification-service
+  - Paginacion server-side de clientes y catalogo (solicitudes ya la tiene)
   - La carpeta NO se renombro a Elixir-Cocktails (bloqueada; quedo bar-events)
 
 --------------------------------------------------------------------------------
@@ -430,8 +468,266 @@ PENDIENTES DE BACKEND AUN:
         ng build sin warnings
   [x] DB restaurada a los 3 seeds (borre el cliente de prueba id=4)
 
-  NOTA: reservations / last_event / total_spent hoy son de solo lectura en la
-  UI; los actualiza la Fase 4 cuando se confirman solicitudes.
+  NOTA: ya la Fase 4 los actualiza: al pasar una solicitud a CONFIRMADO se
+  suma total_spent / reservations / last_event, y al salir de CONFIRMADO se
+  restan (last_event se recalcula con el ultimo evento confirmado).
+
+
+--------------------------------------------------------------------------------
+0.6 FASE 4 (solicitudes) + FASE 5 (link + PDF) - SESION 5 (SIN COMMITEAR)
+--------------------------------------------------------------------------------
+
+  ESTADO AL CIERRE: core-service compila (mvn -DskipTests compile = EXIT 0),
+  ng build SIN warnings, ng test 8 archivos / 10 tests OK.
+  NO se hizo la prueba end-to-end (Docker estaba apagado; ver bloque 0.4).
+
+  [x] BACKEND core-service (archivos NUEVOS = untracked):
+      - V7__set_tier_prices.sql: precios de service_tiers (V4 los dejo NULL;
+        sin V7 el cotizador cobra $0). BASE=6.00 por persona-hora,
+        PREMIUM=6.00 por persona (una sola vez), PERSONAL=25.00 por
+        bartender-hora.
+      - V8__create_requests.sql: tabla requests (folio UNIQUE, public_token
+        UNIQUE, FK event_type_id, FK client_id ON DELETE SET NULL, montos
+        DECIMAL(12,2), status default 'PENDIENTE') + tabla puente
+        request_cocktails (PK compuesta, FKs ON DELETE CASCADE).
+      - Entidades: Request, RequestLevel (BASE/PREMIUM), RequestStatus
+        (PENDIENTE/CONFIRMADO/CANCELADO). NO hay nivel PERSONAL: ese costo
+        entra por extraBartenders.
+      - DTOs: SolicitudRequest (Bean Validation: eventDate yyyy-MM-dd,
+        eventTime HH:mm, guests 1..100000, duration 1..24, level no vacio,
+        cocktailIds no nulos), SolicitudResponse (+ Breakdown, CocktailRef,
+        ClientRef, fabrica from(Request)), StatusUpdateRequest.
+      - SolicitudService:
+          create   -> folio "REQ-%03d" (tras 2 saves, arranca TMP-...),
+                      publicToken = UUID sin guiones, upsert de Client por
+                      email (reactiva inactivos y pisa nombre/whatsapp),
+                      prices() desde service_tiers
+          getByToken / getAdmin / listAdmin(?status=&search=) /
+          updateStatus (recalcula total_spent, reservations y last_event)
+      - SolicitudPdfService (NUEVO): openhtmltopdf-pdfbox 1.0.10 (la
+        dependencia ya estaba en el pom y NADIE la usaba).
+        OJO: el parser de openhtmltopdf es XML -> el HTML tiene que ser
+        XHTML estricto (todo tag cerrado, & escapado, sin '<' en el texto)
+        y conviene el header <?xml ... encoding="UTF-8"?>.
+      - Endpoints:
+          PUBLICOS (sin token):
+            POST   /api/public/solicitudes                 -> 201 + folio
+            GET    /api/public/solicitudes/{token}         -> 200 / 404
+            GET    /api/public/solicitudes/{token}/pdf     -> application/pdf
+          ADMIN (Bearer + ROLE_ADMIN):
+            GET    /api/requests?status=&search=
+            GET    /api/requests/{id}
+            GET    /api/requests/{id}/pdf                  -> application/pdf
+            PUT    /api/requests/{id}/status   (400 si el estado es invalido)
+          NO hizo falta tocar el gateway: la ruta 40 /api/public/** y la 50
+          /api/** ya llevan todo a core-service.
+      - SecurityConfig (MODIFICADO, unico diff backend previo): agrega
+        "/error" a permitAll(). Sin eso el 404/400 devolvia 401 en vez del
+        JSON de GlobalExceptionHandler.
+      - FIX aplicado: al salir de CONFIRMADO ahora se revierte
+        client.lastEvent con el ultimo evento confirmado que le quede al
+        cliente (RequestRepository.findByClientAndStatusOrderByEventDateDesc)
+        y descripcionEvento tolera eventDate nulo.
+
+  [x] FRONTEND (rutas nuevas en app.routes.ts):
+        /panel                  -> CatalogAdmin   (igual que antes)
+        /panel/clientes         -> ClientsAdmin   (igual que antes)
+        /panel/solicitudes      -> RequestsAdmin  (NUEVO)
+        /panel/solicitudes/:id  -> RequestDetail  (NUEVO)
+        /panel/dashboard        -> RequestsAdmin  (NUEVO: alias al dashboard)
+        /cotizador              -> Quote          (NUEVO: salia en el diff)
+        /solicitud/:token       -> Seguimiento    (NUEVO, PUBLICO, Fase 5)
+        **                      -> Home
+        OJO: el Placeholder quedo FUERA de rutas (features/placeholder es
+        codigo muerto; se conserva por si se necesita, su spec sigue pasando)
+      - features/quote/          cotizador 3 pasos + pantalla de
+                                 confirmacion (folio, link de seguimiento
+                                 copiar/abrir, descarga del PDF publico)
+      - features/admin/requests-admin  "Vision General" = dashboard (4
+                                 metricas calculadas EN CLIENTE: total,
+                                 ingresos, proximos 7 dias, pendientes) +
+                                 tabla con busqueda, filtro por estado y
+                                 paginacion de 10
+      - features/admin/request-detail  wireframe detalle_de_solicitud_admin:
+                                 cabecera con folio/estado + acciones
+                                 (Cambiar Estado -> selector inline, Descargar
+                                 PDF via blob con Authorization, Enviar
+                                 WhatsApp), tarjetas de cliente, evento,
+                                 menu y desglose financiero. Reusa
+                                 requests-admin.css via styleUrls
+      - features/seguimiento/    pantalla publica por token (estado + resumen
+                                 del estado, evento, datos, carta, desglose,
+                                 WhatsApp y PDF)
+      - Sidebars de los 4 componentes admin: Dashboard, Solicitudes, Clientes
+        y Catalogo ahora son <a> con routerLink + routerLinkActive (antes
+        Dashboard/Configuracion eran <span> muertos y Solicitudes no existia
+        en catalog/clients). "Nueva Reserva" deja de estar disabled y va a
+        /cotizador. Los <ts> importan RouterLinkActive.
+      - CSS: 5 clases que el cotizador usaba sin definir (.columna-form,
+        .filas, .catalogo, .banner-capas, .resumen-final) + color base y
+        hover en .item del sidebar (los 3 css de admin)
+      - Montos unificados a es-MX / MXN (quote, requests-admin, request-detail,
+        seguimiento); antes decian USD y los wireframes dicen MXN
+      - angular.json: budgets subidos a 600kB (initial) y 20kB
+        (anyComponentStyle) porque quote.css ya pesa 16.5kB
+
+  [x] TESTS: cd frontend && ng test -> 8 archivos / 10 tests en verde
+      - catalog.spec.ts roto y arreglado (importaba 'Catalog' en vez de
+        'CatalogService' y no proveia HttpClient)
+      - app.spec / home.spec / placeholder.spec arreglados (faltaban
+        provideRouter + provideHttpClient; ademas el "Hello, frontend" ya no
+        existe en app.html -> ahora verifica la marca "Velvet & Gilt")
+      - NUEVOS: request-detail.spec, requests-admin.spec (espera el flush de
+        GET /api/requests), seguimiento.spec
+      (en la sesion 6 se agrego whatsapp.spec y el total subio a 14)
+
+  [x] LO QUE SE CERRO DESPUES (sesion 6, ver bloque 0.7):
+      1. Prueba end-to-end  HECHA (MySQL + core + notification en vivo)
+      2. Calendario de eventos  HECHO  -> /panel/calendario
+      3. Paginacion server-side + /resumen  HECHOS (JPQL con Page)
+      4. Transiciones de estado validadas  HECHAS (409 Conflict)
+      5. notification-service (Fase 6)  HECHO (backend completo)
+  [ ] SIGUE FALTANDO: commit + push (preguntar), RabbitMQ + sender de
+      WhatsApp automatico, Fase 7 (nube), pantalla de Configuracion
+
+
+--------------------------------------------------------------------------------
+0.7 SESION 6 - TERMINALES SUELTAS DE LA FASE 4/5 + FASE 6 (SIN COMMITEAR)
+--------------------------------------------------------------------------------
+
+  ESTADO AL CIERRE: core compila y pasa sus 4 tests, notification compila y
+  pasa sus 5 tests, ng build SIN warnings y ng test 14 tests en verde.
+  Verificado en vivo con MySQL + core-service (:8082) + notification (:8083).
+
+  [x] PAGINACION SERVER-SIDE (core-service)
+      - RequestRepository.search(status, needle, Pageable) con JPQL y
+        countQuery: filtra por estado y por folio/cliente/correo/lugar/tipo
+        de evento en la BD (antes se traia todo y se filtraba en memoria)
+      - DTO SolicitudPageResponse {items,total,page,size,totalPages}
+      - GET /api/requests ahora SIEMPRE pagina: ?page=&size=&status=&search=
+      - GET /api/requests/resumen -> {solicitudes, ingresosEstimados,
+        proximosEventos, pendientes, confirmadas, canceladas} con 4 queries
+        (el dashboard ya no baja la tabla completa)
+      - GET /api/requests/eventos?desde=&hasta= -> lista ligera para el
+        calendario (RequestEventoResponse)
+      - Frontend: admin-requests.page()/resumen()/eventos(); la busqueda del
+        dashboard se debouncea 300 ms y pagina=1 automaticamente; si la pagina
+        actual queda vacia regresa a la 1
+
+  [x] TRANSICIONES DE ESTADO (core-service)
+      - Matriz en SolicitudService: PENDIENTE->{CONFIRMADO,CANCELADO},
+        CONFIRMADO->{PENDIENTE,CANCELADO}, CANCELADO->{PENDIENTE}
+      - Salto invalido -> ConflictException -> 409 con mensaje legible;
+        el detalle de la solicitud muestra "No se pudo actualizar el
+        estado: Transicion no permitida: ..."
+      - Tests: SolicitudServiceTransicionesTests (4 casos con Mockito)
+
+  [x] CALENDARIO (Fase 4 cerrada)
+      - features/admin/calendario.{ts,html,css} + ruta /panel/calendario
+        (con authGuard) + link "Calendario" en los 4 sidebars
+      - Rejilla dom-sab del mes, nav anterior/siguiente/Hoy, chips por dia
+        con folio+cliente+estado (colores), filtro por estado, clic ->
+        /panel/solicitudes/:id; reusa requests-admin.css
+
+  [x] FASE 6 - notification-service (ya no esta vacio)
+      - pom: + spring-boot-starter-security y spring-boot-starter-mail
+      - V1__create_notifications.sql: tabla notifications (type, channel,
+        recipient, subject, body, reference_id, status, transport, error,
+        created_at, sent_at) en notif_db
+      - Entity Notification + enums NotificationType (SOLICITUD_CREADA,
+        ESTADO_CAMBIADO), NotificationChannel (EMAIL, WHATSAPP),
+        NotificationStatus (PENDIENTE, ENVIADA, FALLIDA)
+      - NotificationService: crear/reenviar/listar; si el transportador
+        falla la notificacion queda FALLIDA con el error (nunca rompe al
+        cliente), reenviar la deja de nuevo PENDIENTE
+      - Transportadores: ConsoleNotificationSender (siempre, imprime el
+        mensaje) y SmtpNotificationSender (solo si existe spring.mail.host)
+        -> NotificationDispatcher elige por canal y orden
+      - Endpoints:
+          POST /api/notifications            publico (lo llama core directo
+                                              a :8083, sin pasar por gateway)
+          GET  /api/notifications?status=    solo ADMIN
+          PUT  /api/notifications/{id}/reenviar  solo ADMIN
+        Seguridad = mismo patron que core (GatewayHeaderAuthFilter leyendo
+        X-User-Email/X-User-Role que pone el gateway + @PreAuthorize)
+        El gateway YA tenia la ruta /api/notifications/** -> :8083
+      - core-service: NotificationClient (RestClient a
+        app.notifications.url, timeout 2s/3s) que se dispara DESPUES del
+        commit (TransactionSynchronization) y nunca rompe la operacion:
+          solicitud creada -> aviso al admin con folio, datos y link
+          estado cambiado -> aviso al cliente (destino = su correo)
+        Props en core application.properties: app.notifications.url,
+        app.public-url (para armar el link /solicitud/{token}) y
+        app.admin-email
+
+  [x] BOTON DE WHATSAPP CON EL PAQUETE (lo pidio el usuario)
+      - core/utils/whatsapp.ts: mensajePaquete(solicitud) arma el texto con
+        nombre, evento, fecha, lugar, invitados, nivel, carta, desglose,
+        total, estado y link; enlaceWhatsapp() lo codifica para wa.me
+      - Se usa en requests-admin (fila) y request-detail (boton) ->
+        admin escribe al CLIENTE (destino = whatsapp del cliente)
+      - Si el cliente no tiene telefono el boton queda deshabilitado
+      - OJO: esto NO envia nada solo; abre WhatsApp con el texto armado
+        (envio automatico = fase 8 con Evolution API / Cloud API)
+
+  [x] CLIENTE -> DUENO (sesion 7, lo pidio el usuario)
+      - WHATSAPP_OWNER = '51937336603' (numero del dueño, Peru)
+      - enlaceConDueno(mensaje) = enlaceWhatsapp(WHATSAPP_OWNER, ...)
+      - mensajeParaDueno(solicitud): "Hola, soy {nombre} y acabo de
+        generar mi paquete (REQ-XXX)..." + evento, fecha, lugar,
+        invitados, nivel, carta, total y link de seguimiento
+      - Cotizador confirmacion: boton "Enviar mi paquete por WhatsApp"
+        y "Contactar via WhatsApp" (antes iba a /contacto, bug)
+      - Seguimiento /solicitud/{token}: boton "Enviar mi paquete por
+        WhatsApp" (antes abria chat CON EL PROPIO NUMERO del cliente)
+      - Contacto: WhatsApp Business era href="#" con +52 55 1234 5678
+        -> ahora wa.me/51937336603 y "+51 937 336 603"
+
+  [x] TESTS AGREGADOS EN LA SESION 6
+      - core-service: 4 (transiciones, reversion de cliente, estado invalido)
+      - notification-service: 5 (enviada, fallida, tipo invalido, 404, retry)
+      - frontend: whatsapp.spec -> 9 archivos / 16 tests (2 nuevas:
+        WHATSAPP_OWNER/enlaceConDueno y mensajeParaDueno)
+
+  [x] SESION 7 (parcial, sin commit) - CELULAR, CONFIGURACION Y CONTACTO
+      - CORS: el telefono fallaba con "No se pudo enviar la solicitud" porque
+        el gateway solo aceptaba Origin localhost:4200 (devolvia 403 sin
+        cuerpo). CorsConfig ahora lee app.cors.allowed-origins (properties)
+        con localhost, 127.0.0.1 y la IP LAN 192.168.18.21. En la nube se
+        cambia por env APP_CORS_ALLOWED_ORIGINS (sin recompilar)
+      - ng serve abierto a la red: --host 0.0.0.0 (http://192.168.18.21:4200)
+      - Numero del dueno configurable (antes hardcodeado en whatsapp.ts):
+        core_service V9__create_app_settings (tabla app_settings con
+        whatsapp_owner / contact_email / business_name),
+        SettingsService + SettingAdminController (GET/PUT /api/settings,
+        solo ADMIN) + PublicSettingsController (GET /api/public/settings)
+        + frontend SettingsService (carga en App, signal whatsappDueno)
+        + setDuenoWhatsapp() en core/utils/whatsapp (enlaceConDueno ya no
+        usa la constante fija)
+      - Pantalla /panel/configuracion (nueva ruta + link en los 5 sidebars,
+        antes era un <span> muerto): WhatsApp del negocio, nombre y correo
+      - Formulario de contacto arreglado: era un <button type="button">
+        sin handler; ahora valida nombre/correo y abre wa.me/dueno con el
+        mensaje armado (fecha con fechaLarga); el panel de contacto muestra
+        el numero y correo desde los settings
+      - Tests: frontend 9 archivos / 18 tests (2 nuevas sobre
+        setDuenoWhatsapp); core mvn test EXIT=0
+      - Servicios corren desde jar (gateway y core) porque los argfiles de
+        Temp se borran; mvn -DskipTests package y java -jar
+
+  [ ] FALTA (para la sesion 7, en este orden):
+      1. Commit + push de todo (preguntar antes)
+      2. RabbitMQ: reemplazar el HTTP core->notificacion por cola (async y
+         con reintentos); depende de si el usuario quiere el envio automatico
+      3. Sender de WhatsApp real (Evolution API self-hosted o Cloud API) para
+         que las cotizaciones nuevas lleguen solas al numero del dueño
+         (DECISION DEL USUARIO: no por ahora, cobra por mensaje)
+      4. Fase 7 (nube) y pendientes chicos (paginacion de clientes/catalogo,
+         foto hero offline)
+      5. Pendientes funcionales: rol STAFF sin permisos (todo pide ADMIN),
+         no hay pantalla de notificaciones (GET /api/notifications sin UI),
+         historial de cambios de estado, dashboard real, auto-refresco del
+         seguimiento
 
 
 --------------------------------------------------------------------------------
@@ -589,11 +885,12 @@ PENDIENTES DE BACKEND AUN:
         |         unico puerto expuesto, en dev se puede tocar :8081/:8082 directo)
         |
         +--> auth-service :8081         (login, usuarios, roles, JWT)   [OK]
-        +--> core-service :8082         (cocteles, tipos de evento, tiers)[OK]
-        |                                FUTURO: clientes, solicitudes #REQ,
-        |                                cotizador, desglose, PDF (fases 3-5)
-        +--> notification-service :8083 (vacio por ahora; preview wa.me,
-                                         log, API WhatsApp oficial = fase 6)
+        +--> core-service :8082         (cocteles, tipos de evento, tiers,
+        |                                clientes, solicitudes #REQ, cotizador,
+        |                                desglose, PDF, calendario)      [OK]
+        +--> notification-service :8083 (notifications: crear/listar/
+                                         reenviar, sender CONSOLA/SMTP,
+                                         core la llama tras el commit)   [OK]
         |
   eureka-server :8761 (descubrimiento de servicios; clientes usan
                        eureka.instance.hostname=localhost)
@@ -613,26 +910,41 @@ PENDIENTES DE BACKEND AUN:
     GET  /api/public/cocktails|event-types|service-tiers   publico
     GET/POST/PUT/DELETE /api/cocktails|event-types|service-tiers  solo ADMIN
     GET/POST/PUT/DELETE /api/clients  solo ADMIN  (?search=&tier= en el GET)
+    POST /api/public/solicitudes               publico -> 201 + folio + token
+    GET  /api/public/solicitudes/{token}       publico -> seguimiento
+    GET  /api/public/solicitudes/{token}/pdf   publico -> application/pdf
+    GET  /api/requests?status=&search=&page=  solo ADMIN -> pagina JSON
+    GET  /api/requests/resumen                 solo ADMIN -> metricas
+    GET  /api/requests/eventos?desde=&hasta=   solo ADMIN -> calendario
+    GET  /api/requests/{id}  |  /{id}/pdf      solo ADMIN
+    PUT  /api/requests/{id}/status             solo ADMIN (409 si la
+                                                transicion no esta permitida)
+    POST /api/notifications                    publico (solo via core :8083)
+    GET  /api/notifications?status=&type=      solo ADMIN
+    PUT  /api/notifications/{id}/reenviar      solo ADMIN
     (GET a las rutas admin requieren header X-User-Role: ADMIN del gateway)
-
-  PENDIENTES (no existen aun; son fases 4 y 5):
-    POST /api/public/solicitudes            (crea solicitud -> folio #REQ-xxx)
-    GET  /api/public/solicitudes/{token}    (link de seguimiento del cliente)
 
   ENTIDADES EN core-service:
     Cocktail        nombre, categoria, ingredientes, imagen, activo,
                     tipos de evento recomendados        [creada, con seeds]
     EventType       Bodas, Corporativos, Fiestas Privadas, Masterclass [OK]
-    ServiceTier     Servicio Base (horas + pax), Menu Premium,
-                    Personal adicional                  [OK, price en NULL]
+    ServiceTier     Servicio Base (precio por persona-hora), Menu Premium
+                    (por persona, una vez), Personal adicional (por
+                    bartender-hora)                     [OK, precios en V7]
     Client          nombre, email, whatsapp, ubicacion, tier
                     (VIP/Corporativo/Particular), gasto acumulado
-                    + reservations / last_event (los llena la fase 4)  [OK]
-    Request         folio #REQ-xxx, cliente, tipo evento, fecha/hora,
-                    invitados, duracion, ubicacion, cocteles seleccionados,
+                    + reservations / last_event (los actualiza core al
+                    confirmar o cancelar una solicitud)  [OK]
+    Request         folio #REQ-xxx, token publico, cliente, tipo evento,
+                    fecha/hora, invitados, duracion, ubicacion, cocteles,
                     desglose (base + premium + personal), total,
-                    estado (PENDIENTE/CONFIRMADO/CANCELADO), token publico
-                                                            [PENDIENTE]
+                    estado (PENDIENTE/CONFIRMADO/CANCELADO)   [OK]
+
+  ENTIDADES EN notification-service:
+    Notification    type (SOLICITUD_CREADA/ESTADO_CAMBIADO), channel
+                    (EMAIL/WHATSAPP), recipient, subject, body,
+                    reference_id, status (PENDIENTE/ENVIADA/FALLIDA),
+                    transport (CONSOLA/SMTP), error, created_at, sent_at [OK]
 
 --------------------------------------------------------------------------------
 8. DECISIONES DEL PROYECTO
@@ -674,13 +986,18 @@ PENDIENTES DE BACKEND AUN:
           [HECHA completa: backend V5/V6 + UI /panel/clientes, sesion 4]
   Fase 4  Solicitudes: cotizador publico 3 pasos, estados, dashboard admin,
           desglose financiero + calendario
-          [SIN EMPEZAR - la pantalla de inicio y placeholders ya existen]
+          [HECHA completa: backend V7/V8, cotizador, dashboard, detalle,
+          /panel/calendario; ver bloques 0.6 y 0.7]
   Fase 5  Link publico por token + PDF descargable
-          [SIN EMPEZAR]
-  Fase 6  notification-service (wa.me + interfaz NotificationSender)
-          [SIN EMPEZAR - servicio vacio]
+          [HECHA completa: /solicitud/{token} + PDF publico y de admin,
+          ver bloque 0.6]
+  Fase 6  notification-service (notificaciones + sender)
+          [HECHA el backend: tabla notifications, CRUD, seguridad, sender
+          CONSOLA/SMTP y llamada desde core. FALTA: RabbitMQ (async) y el
+          transportador de WhatsApp automatico -> fase 8]
   Fase 7  Despliegue en la nube + URL publica para compartir links
-  Fase 8  Opcional: WhatsApp Cloud API, pagos Stripe, email
+  Fase 8  Opcional: WhatsApp Cloud API / Evolution API (envio automatico),
+          pagos Stripe, email SMTP real
 
   Orden logico: 0 y 1 son base obligatoria; despues el admin (2 y 3) alimenta
   al cotizador publico (4), que genera las solicitudes que el PDF (5) y
