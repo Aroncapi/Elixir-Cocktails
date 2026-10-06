@@ -1,0 +1,10 @@
+**/target
+**/node_modules
+frontend/dist
+frontend/.angular
+**/*.log
+**/*.err.log
+.git
+.vscode
+.idea
+NOTAS-PROYECTO.txt

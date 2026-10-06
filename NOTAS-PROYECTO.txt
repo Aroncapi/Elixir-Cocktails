@@ -4,8 +4,9 @@ PROYECTO: VELVET & GILT - Plataforma de servicios de mixologia para eventos
 Arquitectura: Microservicios (Spring Cloud) + Angular
 Ubicacion:    C:\Users\AROM\Projects\bar-events
 Nota maestra: LEER ESTA NOTA ANTES DE TOCAR CUALQUIER COSA
-Ultima actualizacion: 05/10/2026 - SESION 6 CERRADA (SIN COMMIT): fases 4, 5
-y 6 completas, paginacion server-side, calendario y tests verdes.
+Ultima actualizacion: 05/10/2026 - SESION 7 (parcial): commit 458b1b5 ya
+subido (fases 4-6 + WhatsApp/config/contacto/CORS), Docker listo para la
+nube. Servicios corriendo en la PC (jar) + ng serve con --host 0.0.0.0.
 Ver 0.7 (detalle sesion 6), 0.6 (sesion 5) y 0.4 (handoff sesion 7).
 ================================================================================
 
@@ -715,15 +716,36 @@ PENDIENTES DE BACKEND AUN:
       - Servicios corren desde jar (gateway y core) porque los argfiles de
         Temp se borran; mvn -DskipTests package y java -jar
 
+  [x] DOCKER (listo, imagenes ya construidas y probadas)
+      - Dockerfile raiz generico: docker build --build-arg MODULE=<servicio>
+        (multi-stage: maven:3.9-eclipse-temurin-25 -> eclipse-temurin:25-jre)
+      - frontend/Dockerfile: node:22-alpine (npm ci + ng build production)
+        -> nginx:alpine con frontend/nginx.conf (estatico + proxy /api -> gateway)
+      - .dockerignore y frontend/.dockerignore (sin target/node_modules/dist)
+      - docker-compose.yml completo: mysql + eureka + auth + core +
+        notification + gateway + frontend; solo se publican frontend :80 y
+        mysql :3306 (el resto queda en la red interna)
+      - Variables por entorno: JWT_SECRET, CORS_ORIGINS, PUBLIC_URL,
+        ADMIN_EMAIL, SPRING_DATASOURCE_URL (mysql:3306/...), EUREKA_*
+      - Comandos: docker compose up -d --build / down / ps / logs <svc>
+      - Probado: las 6 imagenes compilaron; el stack arranca (mysql
+        compartido con el dev local, volumen mysql_data intacto)
+      - Para la nube: PUBLIC_URL=https://tudominio.com,
+        CORS_ORIGINS=https://tudominio.com, JWT_SECRET=<secreto fuerte>
+      - OJO: los servicios locales (jar en la PC) y los de Docker conviven
+        (no chocan puertos) pero traen 2 Eurekas; para produccion usar solo
+        docker compose
+
   [ ] FALTA (para la sesion 7, en este orden):
-      1. Commit + push de todo (preguntar antes)
+      1. Fase 7 REAL: elegir proveedor (Oracle Always Free / VPS) y desplegar
+         ahi el docker-compose + dominio + HTTPS
       2. RabbitMQ: reemplazar el HTTP core->notificacion por cola (async y
          con reintentos); depende de si el usuario quiere el envio automatico
       3. Sender de WhatsApp real (Evolution API self-hosted o Cloud API) para
          que las cotizaciones nuevas lleguen solas al numero del dueño
          (DECISION DEL USUARIO: no por ahora, cobra por mensaje)
-      4. Fase 7 (nube) y pendientes chicos (paginacion de clientes/catalogo,
-         foto hero offline)
+      4. Pendientes chicos: paginacion de clientes/catalogo, foto hero
+         offline, correo SMTP real (spring.mail)
       5. Pendientes funcionales: rol STAFF sin permisos (todo pide ADMIN),
          no hay pantalla de notificaciones (GET /api/notifications sin UI),
          historial de cambios de estado, dashboard real, auto-refresco del

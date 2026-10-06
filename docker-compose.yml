@@ -1,3 +1,8 @@
+# Stack completo (BD + 5 microservicios + frontend).
+#   levantar:  docker compose up -d --build
+#   apagar:    docker compose down
+# Solo se publican el frontend (:80) y MySQL (:3306); los demas servicios
+# quedan dentro de la red interna.
 services:
   mysql:
     image: mysql:8
@@ -17,6 +22,104 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+
+  eureka:
+    build:
+      context: .
+      args:
+        MODULE: eureka-server
+    container_name: bar-events-eureka
+    restart: unless-stopped
+    environment:
+      EUREKA_INSTANCE_HOSTNAME: eureka
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -qO- http://localhost:8761/actuator/health || exit 1" ]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 40s
+
+  auth:
+    build:
+      context: .
+      args:
+        MODULE: auth-service
+    container_name: bar-events-auth
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/auth_db?useUnicode=true&characterEncoding=UTF-8&serverTimezone=America/Mexico_City
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka/
+      EUREKA_INSTANCE_HOSTNAME: auth
+      JWT_SECRET: ${JWT_SECRET:-velvet-gilt-dev-secret-cambiar-en-produccion-0123456789}
+
+  core:
+    build:
+      context: .
+      args:
+        MODULE: core-service
+    container_name: bar-events-core
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/core_db?useUnicode=true&characterEncoding=UTF-8&serverTimezone=America/Mexico_City
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka/
+      EUREKA_INSTANCE_HOSTNAME: core
+      APP_NOTIFICATIONS_URL: http://notification:8083/api/notifications
+      APP_PUBLIC_URL: ${PUBLIC_URL:-http://localhost}
+      APP_ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@velvet.mx}
+
+  notification:
+    build:
+      context: .
+      args:
+        MODULE: notification-service
+    container_name: bar-events-notification
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/notif_db?useUnicode=true&characterEncoding=UTF-8&serverTimezone=America/Mexico_City
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka/
+      EUREKA_INSTANCE_HOSTNAME: notification
+
+  gateway:
+    build:
+      context: .
+      args:
+        MODULE: gateway-service
+    container_name: bar-events-gateway
+    restart: unless-stopped
+    depends_on:
+      eureka:
+        condition: service_healthy
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka/
+      EUREKA_INSTANCE_HOSTNAME: gateway
+      JWT_SECRET: ${JWT_SECRET:-velvet-gilt-dev-secret-cambiar-en-produccion-0123456789}
+      # En la nube: APP_CORS_ALLOWED_ORIGINS=https://tudominio.com
+      APP_CORS_ALLOWED_ORIGINS: ${CORS_ORIGINS:-http://localhost:4200,https://localhost:4200,http://localhost}
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: bar-events-frontend
+    restart: unless-stopped
+    depends_on:
+      - gateway
+    ports:
+      - "80:80"
 
 volumes:
   mysql_data:
