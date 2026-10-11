@@ -3,6 +3,12 @@
   max-width: 1440px;
   margin: 80px auto 0;
   padding: 40px 20px 80px;
+  background-color: var(--fondo);
+  background-image:
+    radial-gradient(ellipse 60% 35% at 50% 0%, rgba(212, 175, 55, 0.07), transparent 70%),
+    radial-gradient(rgba(212, 175, 55, 0.05) 1px, transparent 1px);
+  background-size: 100% auto, 24px 24px;
+  background-repeat: no-repeat, repeat;
 }
 
 /* ---------- Stepper ---------- */
