@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Cocktail } from '../../core/models/cocktail';
@@ -134,20 +134,21 @@ export class Quote implements OnInit {
   }
 
   /** Horas realmente cobradas: siempre el minimo del paquete base. */
-  protected horasCobradas = computed(() => Math.max(this.durationHours, this.settings.horasBase()));
+  protected horasCobradas(): number {
+    return Math.max(this.durationHours, this.settings.horasBase());
+  }
 
   /** Equipo asignado automaticamente segun el numero de invitados. */
-  protected equipo = computed(() => {
+  protected equipo(): { bartenders: number; assistants: number } {
     const masterclass = this.nombreTipo()?.code === 'MASTERCLASS';
     if (masterclass) {
       return { bartenders: 1, assistants: this.guests >= 60 ? 1 : 0 };
     }
-    const g = this.guests;
     return {
-      bartenders: contar(g, BARTENDER_STEPS, BARTENDER_STEP_TAIL, 1),
-      assistants: contar(g, ASSISTANT_STEPS, ASSISTANT_STEP_TAIL, 0),
+      bartenders: contar(this.guests, BARTENDER_STEPS, BARTENDER_STEP_TAIL, 1),
+      assistants: contar(this.guests, ASSISTANT_STEPS, ASSISTANT_STEP_TAIL, 0),
     };
-  });
+  }
 
   protected desglose(): Desglose {
     const horasExtra = this.horasCobradas() - this.settings.horasBase();
