@@ -4,10 +4,11 @@ PROYECTO: VELVET & GILT - Plataforma de servicios de mixologia para eventos
 Arquitectura: Microservicios (Spring Cloud) + Angular
 Ubicacion:    C:\Users\AROM\Projects\bar-events
 Nota maestra: LEER ESTA NOTA ANTES DE TOCAR CUALQUIER COSA
-Ultima actualizacion: 05/10/2026 - SESION 7 (parcial): commits 458b1b5
-(fases 4-6 + WhatsApp/config/contacto/CORS) y dd480de (Docker) ya subidos.
-Servicios corriendo en la PC (jar) + ng serve con --host 0.0.0.0.
-Ver 0.7 (detalle sesion 6), 0.6 (sesion 5) y 0.4 (handoff sesion 7).
+Ultima actualizacion: 10/10/2026 - SESION 8: precios en soles (PEN) con
+equipo automatico por invitados, fotos de cocteles y fixes de cache/
+imagenes/cotizador. Commits 44dcfb9, 1e9b39f + los de esta sesion.
+TODO corre en Docker: http://localhost (frontend + /api via nginx).
+Ver bloque 0.8 (lo ultimo) y 0.7/0.6 para el historial.
 ================================================================================
 
 --------------------------------------------------------------------------------
@@ -751,6 +752,103 @@ PENDIENTES DE BACKEND AUN:
          historial de cambios de estado, dashboard real, auto-refresco del
          seguimiento
 
+
+--------------------------------------------------------------------------------
+0.8 SESION 8 - PRECIOS EN SOLES (PEN) + EQUIPO AUTOMATICO + FIXES
+--------------------------------------------------------------------------------
+
+El modelo de precios cambio de USD/hora-persona a SOLES con equipo fijo por
+numero de invitados. Todo commiteado y verificado en vivo con Docker.
+
+COMMITS (origin/main, rama main):
+  44dcfb9  Fotos de cocteles: subida de archivos en el catalogo admin
+  1e9b39f  Precios en soles (PEN), equipo automatico por invitados y
+           tipo de cambio configurable
+  + commits de esta sesion (fix cotizador, textura, cache nginx, nota)
+
+[x] PRECIOS PEN (V11__pricing_pen_model.sql, ya aplicada en core_db):
+    - service_tiers: BASE=272 (bartender, paquete minimo 5h),
+      PERSONAL=150 (ayudante base), PREMIUM=0 (columna se conserva pero
+      YA NO se cobra; el cliente ya no elige nivel)
+    - app_settings: exchange_rate=3.4, base_hours=5, extra_hour_pen=40
+    - requests: +bartenders, +assistants (equipo guardado al crear)
+    - El cliente NO elige bartenders: el equipo se calcula solo
+    - Montos SIEMPRE en soles; UI/PDF/WhatsApp muestran
+      "S/ X (≈ US$ Y)" usando el tipo de cambio de configuracion
+      (frontend/src/app/core/utils/dinero.ts: montoDoble/soles/dolares)
+    - SettingsService (backend) lee exchange_rate/base_hours/
+      extra_hour_pen; el admin los edita en /panel/configuracion;
+      frontend settings.ts los carga como signals tipoCambio/horasBase/
+      horaExtra
+
+[x] TABLA DE EQUIPO (eventos normales; threshold = "cuando llega a N"):
+      1-54: 1B/0A   55: 2B      100: +1A    120: 3B     150: +2A
+      180: 4B       231: 5B     271: 6B+3A  331: 7B     371: 8B+4A
+      431: 9B       481: 10B+5A
+      despues de 481: +1 bartender c/50 invitados, +1 ayudante c/100
+    MASTERCLASS: 1 bartender SIEMPRE, 1 ayudante desde 60 invitados
+    Codigo espejado: SolicitudService.porInvitadosBartenders/Ayudantes
+    (arrays BARTENDER_STEPS/ASSISTANT_STEPS) y quote.ts equipo() con
+    la funcion contar(). Regresion cubierta en quote.spec.ts.
+
+[x] FOTOS DE COCTELES (commit 44dcfb9):
+    FileStorageService + POST /api/files (solo ADMIN, multipart, 5MB,
+    guarda en app.upload.dir=uploads) + GET /api/public/files/{name}.
+    Docker: volumen uploads_data montado en /data/uploads en core.
+    El modal del catalogo admin ya sube archivo (no solo URL).
+
+[x] FIXES IMPORTANTES DE LA SESION (NO repetir los bugs):
+    1. nginx.conf - CACHE: index.html debe salir con
+       Cache-Control "no-cache" y los assets hash (*.js/*.css) con
+       1 anio immutable. Sin esto el navegador se quedaba con la app
+       vieja y "no veia" los cambios.
+    2. nginx.conf - IMAGENES: location /api/ DEBE ser "^~ /api/".
+       Sin ^~, la regex de assets \.(jpg|png|...)$ tiene prioridad y
+       atrapa /api/public/files/*.jpg -> imagenes 404.
+    3. quote.ts - EQUIPO CONGELADO: equipo() y horasCobradas() eran
+       computed() de Angular pero leian propiedades NORMALES
+       (guests/durationHours); un computed solo se recalcula con
+       signals -> la vista se quedaba en 1 bartender aunque el usuario
+       escribiera 70. Ahora son metodos simples. NO volver a computed()
+       salvo que guests/durationHours se conviertan en signals.
+    4. Textura sutil de fondo (puntos dorados al 5% + brillo dorado
+       superior, sin fotos) agregada a .servicios y .cotizador/
+       .confirmacion (lo pidio el usuario; home/contacto si tienen foto).
+    5. Calendario: eventos CANCELADOS ocultos por defecto (visibles
+       solo con el filtro "Cancelado").
+    6. Cotizador paso 1: la tarjeta de estimacion ahora muestra
+       subtotales "Bartenders (N x H hrs)" y "Ayudantes (M x H hrs)".
+
+COMO CORRE HOY (TODO en Docker, 7 contenedores):
+    docker compose up -d --build
+    http://localhost       -> frontend + /api (nginx -> gateway:8080)
+    http://localhost:3306  -> MySQL (barpro/barpro, root/root)
+    Los demas puertos quedan en la red interna del compose.
+    frontend/proxy.conf.json apunta a http://localhost:80 (para
+    ng serve local contra el backend Docker); si el backend corre
+    como jar local, volverlo a :8080.
+
+VERIFICADO EN VIVO (sesion 8): mvn compile + 4/4 tests core;
+    ng build limpio; ng test 20/20 (10 archivos, incluye quote.spec);
+    smoke tests de TODOS los bordes de la tabla de equipo por API
+    (54/55/99/100/119/120/.../480/481/530/531) y MASTERCLASS;
+    PDF en PEN; tipo de cambio configurable probado (4 -> recalcula).
+
+[ ] SIGUE FALTANDO (orden sugerido):
+    1. Rol STAFF: existe pero todo pide ADMIN; darle permisos proprios
+    2. Pantalla de notificaciones en el panel (GET /api/notifications
+       funciona pero no hay UI)
+    3. Historial de cambios de estado de una solicitud
+    4. Auto-refresco del seguimiento /solicitud/{token}
+    5. Paginacion server-side de clientes y catalogo (solicitudes ya)
+    6. SMTP real (spring.mail.* en notification-service)
+    7. RabbitMQ: core->notificacion hoy es HTTP sincrono
+    8. Fase 7: nube (VPS u Oracle Always Free) + dominio + HTTPS
+    9. WhatsApp automatico: DECISION DEL USUARIO = no por ahora
+       (cobra por mensaje); el boton wa.me manual ya funciona
+   10. Decision: la columna level (BASE/PREMIUM) quedo cosmética
+       (no afecta precio); eliminarla del modelo/UI o conservarla
+       para un nivel futuro
 
 --------------------------------------------------------------------------------
 1. CONFIGURACION BASE (YA USADA - no repetir)
