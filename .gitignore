@@ -34,5 +34,8 @@ frontend/.vscode/
 .DS_Store
 Thumbs.db
 
+# Entorno (secretos del deploy; ver .env.example)
+.env
+
 # Subidas de imagenes (fotos de cocteles; viven en el volumen Docker)
 uploads/

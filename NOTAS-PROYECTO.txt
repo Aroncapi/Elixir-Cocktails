@@ -4,9 +4,11 @@ PROYECTO: VELVET & GILT - Plataforma de servicios de mixologia para eventos
 Arquitectura: Microservicios (Spring Cloud) + Angular
 Ubicacion:    C:\Users\AROM\Projects\bar-events
 Nota maestra: LEER ESTA NOTA ANTES DE TOCAR CUALQUIER COSA
-Ultima actualizacion: 10/10/2026 - SESION 8: precios en soles (PEN) con
-equipo automatico por invitados, fotos de cocteles y fixes de cache/
-imagenes/cotizador. Commits 44dcfb9, 1e9b39f + los de esta sesion.
+Ultima actualizacion: 11/10/2026 - SESION 9: preparacion para Oracle
+Cloud Free (.env, deploy.sh, MySQL cerrado en 127.0.0.1) -> bloque 0.9.
+Sesion 8: precios en soles (PEN) con equipo automatico por invitados,
+fotos de cocteles y fixes de cache/imagenes/cotizador. Commits 44dcfb9,
+1e9b39f + los de esta sesion.
 TODO corre en Docker: http://localhost (frontend + /api via nginx).
 Ver bloque 0.8 (lo ultimo) y 0.7/0.6 para el historial.
 ================================================================================
@@ -843,12 +845,82 @@ VERIFICADO EN VIVO (sesion 8): mvn compile + 4/4 tests core;
     5. Paginacion server-side de clientes y catalogo (solicitudes ya)
     6. SMTP real (spring.mail.* en notification-service)
     7. RabbitMQ: core->notificacion hoy es HTTP sincrono
-    8. Fase 7: nube (VPS u Oracle Always Free) + dominio + HTTPS
+    8. Fase 7: nube -> PREPARADO en el repo (bloque 0.9); falta el paso
+       manual en Oracle (crear VM, abrir puertos, clonar y ./deploy.sh)
     9. WhatsApp automatico: DECISION DEL USUARIO = no por ahora
        (cobra por mensaje); el boton wa.me manual ya funciona
    10. Decision: la columna level (BASE/PREMIUM) quedo cosmética
        (no afecta precio); eliminarla del modelo/UI o conservarla
        para un nivel futuro
+
+--------------------------------------------------------------------------------
+0.9 FASE 7 (nube) - PREPARACION LOCAL PARA ORACLE CLOUD - SESION 9
+--------------------------------------------------------------------------------
+
+El usuario tiene cuenta FREE de Oracle Cloud. Decisiones tomadas:
+  - Cuenta Always Free: 1 VM Ampere A1 (ARM) hasta 2 OCPU / 12 GB RAM,
+    Ubuntu 24.04, boot volume >= 47 GB (200 GB gratis en total).
+    Los 6 Dockerfiles ya son multi-arch (maven/temurin/node/nginx/mysql:8),
+    compilan nativos en ARM sin buildx.
+  - Acceso por IP:80 (SIN dominio por ahora); HTTPS/dominio despues
+    (Caddy o certbot delante del nginx) sin rehacer nada.
+  - Flujo de cambios elegido: git pull en el servidor + ./deploy.sh
+    (= git pull && docker compose up -d --build). La cache de Docker
+    reconstruye solo el servicio cuyo modulo cambio (el Dockerfile raiz
+    copia unicamente pom.xml + src del MODULO).
+
+CAMBIOS HECHOS EN EL REPO (esta sesion):
+  [x] .gitignore        + .env (secretos NUNCA se suben al repo)
+  [x] docker-compose.yml  MySQL publicado en 127.0.0.1:3306 (antes
+      0.0.0.0 con root/root -> en la nube era un agujero de seguridad;
+      local sigue igual con localhost:3306). MYSQL_ROOT_PASSWORD y el
+      healthcheck mysqladmin ahora leen ${MYSQL_ROOT_PASSWORD:-root}
+  [x] .env.example (nuevo): JWT_SECRET, MYSQL_ROOT_PASSWORD, PUBLIC_URL,
+      CORS_ORIGINS, ADMIN_EMAIL con instrucciones local/nube
+  [x] deploy.sh (nuevo): git pull + docker compose up -d --build + ps
+      (en la nube: bash deploy.sh; en Windows el dos CRLF no importa)
+
+PASOS EN ORACLE (manuales, pendientes - guia completa):
+  1. Console OCI -> Compute -> Create Instance:
+     shape VM.Standard.A1.Flex, 2 OCPU / 12 GB, Ubuntu 24.04,
+     boot volume 50 GB. Si da "out of host capacity": reintentar
+     o cambiar availability domain (limitacion conocida de Always Free).
+  2. VCN con internet + Security List: abrir ingress TCP 22 y 80
+     (443 cuando haya dominio). CERRAR 3306 (no publicar).
+  3. En la VM (SSH):
+       apt-get update && apt-get install -y docker.io docker-compose-v2
+       (o el script oficial get.docker.com)
+       usermod -aG docker $USER
+       dd swap (2 GB) para que los builds Maven no se ahoguen
+       git clone https://github.com/Aroncapi/Elixir-Cocktails.git
+       cp .env.example .env   -> JWT_SECRET fuerte (openssl rand -base64 48),
+       PUBLIC_URL=http://<IP>, CORS_ORIGINS=http://<IP>
+       ./deploy.sh            (primera vez: ~10-15 min build)
+  4. Verificar: docker compose ps (7 contenedores healthy) + login en
+     http://<IP> con admin@velvetgilt.com / admin123 -> CAMBIAR el
+     password apenas entre (el seed crea admin123 en DB nueva).
+  5. PRIMERA VEZ LA DB VA VACIA (solo seeds de Flyway); para migrar los
+     datos locales: mysqldump en PC -> import en el servidor.
+     Los volumenes mysql_data y uploads_data persisten entre deploys.
+
+FLUJO DE CAMBIOS DESPUES DEL DEPLOY:
+    PC:  git add -A && git commit -m "..." && git push
+    VM:  ./deploy.sh          (o: git pull && docker compose up -d --build)
+  - Cambio de CODIGO      -> rebuild (solo el modulo afectado, cache)
+  - Cambio de CONFIG      -> editar .env en la VM + docker compose up -d
+                             (sin --build, no recompila nada)
+  - Migraciones Flyway    -> solas al arrancar el contenedor
+  - DATOS                -> intactos (volumenes Docker)
+  - Links WhatsApp/PDF    -> usan window.location.origin o PUBLIC_URL,
+                             se solapan solos con la IP publica
+
+NO AFECTA a lo ya hecho:
+  - Botones wa.me del frontend: son puros links del lado cliente
+    (frontend/src/app/core/utils/whatsapp.ts), cero backend.
+  - notificaciones: siguen saliendo por CONSOLA (docker compose logs
+    notification); SMTP/WhatsApp automatico = fase 8 (pendiente).
+  - Solo quedan FUERA de este plan: dominio+HTTPS, CI/CD (opcional),
+    SMTP real, WhatsApp automatico.
 
 --------------------------------------------------------------------------------
 1. CONFIGURACION BASE (YA USADA - no repetir)
@@ -1089,8 +1161,10 @@ VERIFICADO EN VIVO (sesion 8): mvn compile + 4/4 tests core;
   nav glass, layouts split-screen
 - El negocio NO tiene inventario: es servicio de mixologia preparado en el
   evento (esto corrige una version vieja de esta nota)
-- Despliegue nube (fase 7): Railway (~5 USD/mes) o Render (free tier),
-  frontend en Vercel/Netlify gratis.
+- Despliegue nube (fase 7): Oracle Cloud Always Free (cuenta del usuario;
+  VM Ampere A1 ARM 2 OCPU/12 GB + Ubuntu, acceso por IP:80, flujo
+  git pull + deploy.sh). Ver bloque 0.9. (Antes se habia planeado
+  Railway/Render; quedo descartado.)
 
 --------------------------------------------------------------------------------
 9. FASES DEL PROYECTO
@@ -1116,6 +1190,8 @@ VERIFICADO EN VIVO (sesion 8): mvn compile + 4/4 tests core;
           CONSOLA/SMTP y llamada desde core. FALTA: RabbitMQ (async) y el
           transportador de WhatsApp automatico -> fase 8]
   Fase 7  Despliegue en la nube + URL publica para compartir links
+          [PREPARADO en repo: .env.example, deploy.sh, MySQL cerrado en
+           127.0.0.1; falta montar la VM de Oracle -> bloque 0.9]
   Fase 8  Opcional: WhatsApp Cloud API / Evolution API (envio automatico),
           pagos Stripe, email SMTP real
 
