@@ -24,6 +24,8 @@ public record SolicitudResponse(
         String notes,
         String level,
         int extraBartenders,
+        int bartenders,
+        int assistants,
         Breakdown breakdown,
         List<CocktailRef> cocktails,
         ClientRef client,
@@ -67,6 +69,8 @@ public record SolicitudResponse(
                 request.getNotes(),
                 request.getLevel().name(),
                 request.getExtraBartenders(),
+                request.getBartenders(),
+                request.getAssistants(),
                 new Breakdown(
                         request.getBaseAmount(),
                         request.getPremiumAmount(),

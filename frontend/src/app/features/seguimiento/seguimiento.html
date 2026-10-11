@@ -67,12 +67,13 @@
             <dd>{{ s.client.email || '—' }}</dd>
           </div>
           <div>
-            <dt>Servicio</dt>
-            <dd>{{ s.level === 'PREMIUM' ? 'Mixología Premium' : 'Mixología Base' }}</dd>
-          </div>
-          <div>
-            <dt>Bartenders extra</dt>
-            <dd>{{ s.extraBartenders }}</dd>
+            <dt>Equipo</dt>
+            <dd>
+              {{ s.bartenders }} {{ s.bartenders === 1 ? 'bartender' : 'bartenders' }}
+              @if (s.assistants > 0) {
+                + {{ s.assistants }} {{ s.assistants === 1 ? 'ayudante' : 'ayudantes' }}
+              }
+            </dd>
           </div>
         </dl>
       </section>
@@ -95,7 +96,7 @@
         <h2><span class="material-symbols-outlined">receipt_long</span> Desglose</h2>
         <div class="desglose">
           <div class="linea">
-            <span>Servicio Base ({{ s.durationHours }} horas)</span>
+            <span>Bartenders ({{ s.bartenders }} · {{ s.durationHours }} horas)</span>
             <strong>{{ dinero(s.breakdown.base) }}</strong>
           </div>
           @if (s.breakdown.premium > 0) {
@@ -104,9 +105,9 @@
               <strong>{{ dinero(s.breakdown.premium) }}</strong>
             </div>
           }
-          @if (s.breakdown.personal > 0) {
+          @if (s.assistants > 0) {
             <div class="linea">
-              <span>Personal Adicional ({{ s.extraBartenders }} Bartenders)</span>
+              <span>Ayudantes ({{ s.assistants }} · {{ s.durationHours }} horas)</span>
               <strong>{{ dinero(s.breakdown.personal) }}</strong>
             </div>
           }

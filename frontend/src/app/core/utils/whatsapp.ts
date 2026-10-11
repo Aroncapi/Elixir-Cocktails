@@ -1,4 +1,5 @@
 import { Solicitud } from '../models/solicitud';
+import { montoDoble, soles } from './dinero';
 
 export const WHATSAPP_OWNER = '51937336603';
 
@@ -24,13 +25,8 @@ export function telefonoLimpio(telefono: string | null | undefined): string {
   return (telefono ?? '').replace(/[^\d]/g, '');
 }
 
-export function dineroMXN(valor: number): string {
-  return new Intl.NumberFormat('es-MX', {
-    style: 'currency',
-    currency: 'MXN',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(valor);
+export function dineroPEN(valor: number): string {
+  return soles(valor);
 }
 
 export function fechaLarga(fecha: string): string {
@@ -52,13 +48,13 @@ export function mensajePaquete(solicitud: Solicitud): string {
     `Fecha: ${fechaLarga(solicitud.eventDate)}${hora}`,
     `Lugar: ${solicitud.location ?? 'Por definir'}`,
     `Invitados: ${solicitud.guests} | Duracion: ${solicitud.durationHours} h`,
-    `Nivel: ${solicitud.level === 'PREMIUM' ? 'Menu Premium' : 'Servicio Base'}`,
+    `Equipo: ${solicitud.bartenders} bartender(s), ${solicitud.assistants} ayudante(s)`,
     `Carta: ${carta}`,
     '',
-    `Base: ${dineroMXN(solicitud.breakdown.base)}`,
-    `Premium: ${dineroMXN(solicitud.breakdown.premium)}`,
-    `Personal: ${dineroMXN(solicitud.breakdown.personal)}`,
-    `Total: ${dineroMXN(solicitud.breakdown.total)} MXN`,
+    `Bartenders: ${dineroPEN(solicitud.breakdown.base)}`,
+    `Premium: ${dineroPEN(solicitud.breakdown.premium)}`,
+    `Ayudantes: ${dineroPEN(solicitud.breakdown.personal)}`,
+    `Total: ${montoDoble(solicitud.breakdown.total)}`,
     '',
     `Estado: ${solicitud.status.charAt(0) + solicitud.status.slice(1).toLowerCase()}`,
     `Seguimiento: ${enlace}`,
@@ -77,10 +73,10 @@ export function mensajeParaDueno(solicitud: Solicitud): string {
     `Fecha: ${fechaLarga(solicitud.eventDate)}${hora}`,
     `Lugar: ${solicitud.location ?? 'Por definir'}`,
     `Invitados: ${solicitud.guests} | Duracion: ${solicitud.durationHours} h`,
-    `Nivel: ${solicitud.level === 'PREMIUM' ? 'Menu Premium' : 'Servicio Base'}`,
+    `Equipo: ${solicitud.bartenders} bartender(s), ${solicitud.assistants} ayudante(s)`,
     `Carta: ${carta}`,
     '',
-    `Total: ${dineroMXN(solicitud.breakdown.total)} MXN`,
+    `Total: ${montoDoble(solicitud.breakdown.total)}`,
     `Seguimiento: ${enlace}`,
   ].join('\n');
 }

@@ -51,6 +51,8 @@ export interface Solicitud {
   notes: string | null;
   level: 'BASE' | 'PREMIUM';
   extraBartenders: number;
+  bartenders: number;
+  assistants: number;
   breakdown: Desglose;
   cocktails: CocktailRef[];
   client: ClienteRef;

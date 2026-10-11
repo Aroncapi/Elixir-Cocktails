@@ -680,48 +680,33 @@
   margin-top: 40px;
 }
 
-.opciones-nivel {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.opcion-nivel {
-  padding: 20px;
-  text-align: left;
-  background: #1a1a1a;
-  border-top: 2px solid transparent;
-  cursor: pointer;
-  transition: border-color 0.2s ease, background 0.2s ease;
-}
-
-.opcion-nivel:hover {
-  background: #192029;
-}
-
-.opcion-nivel.activa {
-  background: #192029;
-  border-top-color: #d4af37;
-}
-
-.opcion-nivel .titulo {
-  display: block;
-  margin-bottom: 6px;
-  font-family: 'Playfair Display', serif;
-  font-size: 22px;
-  color: #dce3f0;
-}
-
-.opcion-nivel p {
-  margin: 0;
+.equipo-nota {
+  margin: 0 0 16px;
   font-size: 14px;
   line-height: 20px;
   color: #c4c7c7;
 }
 
-.bartenders {
-  max-width: 240px;
+.equipo-resumen {
+  padding: 20px;
+  background: #1a1a1a;
+  border-top: 2px solid #d4af37;
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  color: #dce3f0;
+}
+
+.equipo-resumen strong {
+  color: #d4af37;
+  font-weight: 600;
+}
+
+.ayuda-duracion {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 16px;
+  color: #9aa3b2;
 }
 
 /* ---------- Resumen final (paso 3) ---------- */
@@ -1134,7 +1119,6 @@
 @media (min-width: 640px) {
   .tarjetas-tipos,
   .campos,
-  .opciones-nivel,
   .rejilla-cocteles,
   .bento,
   .pasos-grid {

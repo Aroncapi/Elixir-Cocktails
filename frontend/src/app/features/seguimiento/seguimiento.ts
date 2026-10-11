@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Solicitud } from '../../core/models/solicitud';
 import { SolicitudesService } from '../../core/services/solicitudes';
+import { montoDoble } from '../../core/utils/dinero';
 import { enlaceConDueno, mensajeParaDueno } from '../../core/utils/whatsapp';
 
 const MESES = [
@@ -59,12 +60,7 @@ export class Seguimiento implements OnInit {
   }
 
   protected dinero(valor: number): string {
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: 'MXN',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(valor);
+    return montoDoble(valor);
   }
 
   protected fechaLegible(fecha: string): string {

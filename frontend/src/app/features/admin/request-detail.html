@@ -174,13 +174,8 @@
                 <dd>{{ s.location || '—' }}</dd>
               </div>
               <div>
-                <dt>Nivel</dt>
-                <dd>
-                  {{ nivelTexto() }}
-                  @if (s.extraBartenders > 0) {
-                    · {{ s.extraBartenders }} bartender(s) extra
-                  }
-                </dd>
+                <dt>Equipo</dt>
+                <dd>{{ equipoTexto() }}</dd>
               </div>
               @if (s.notes) {
                 <div>
@@ -226,7 +221,7 @@
             </h3>
             <div class="desglose">
               <div class="linea">
-                <span>Servicio Base ({{ s.durationHours }} horas)</span>
+                <span>Bartenders ({{ s.bartenders }} · {{ s.durationHours }} horas)</span>
                 <strong>{{ dinero(s.breakdown.base) }}</strong>
               </div>
               @if (s.breakdown.premium > 0) {
@@ -235,9 +230,9 @@
                   <strong>{{ dinero(s.breakdown.premium) }}</strong>
                 </div>
               }
-              @if (s.breakdown.personal > 0) {
+              @if (s.assistants > 0) {
                 <div class="linea">
-                  <span>Personal Adicional ({{ s.extraBartenders }} Bartenders)</span>
+                  <span>Ayudantes ({{ s.assistants }} · {{ s.durationHours }} horas)</span>
                   <strong>{{ dinero(s.breakdown.personal) }}</strong>
                 </div>
               }

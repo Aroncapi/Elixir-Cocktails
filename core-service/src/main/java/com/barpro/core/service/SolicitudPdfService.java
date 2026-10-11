@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -21,7 +22,13 @@ import java.util.Locale;
 public class SolicitudPdfService {
 
     private static final DateTimeFormatter FECHA =
-            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm", new Locale("es", "MX"));
+            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm", new Locale("es", "PE"));
+
+    private final SettingsService settings;
+
+    public SolicitudPdfService(SettingsService settings) {
+        this.settings = settings;
+    }
 
     public byte[] generar(SolicitudResponse solicitud) {
         String html = plantilla(solicitud);
@@ -76,7 +83,7 @@ public class SolicitudPdfService {
                 .append("<h1>Cotizacion de evento</h1>")
                 .append("<p class=\"sub\">Folio <strong>#").append(esc(s.folio())).append("</strong> &nbsp;·&nbsp; ")
                 .append("<span class=\"badge\">").append(esc(estado(s.status()))).append("</span> &nbsp;·&nbsp; ")
-                .append("Emitido ").append(FECHA.format(Instant.now().atZone(ZoneId.of("America/Mexico_City"))))
+                .append("Emitido ").append(FECHA.format(Instant.now().atZone(ZoneId.of("America/Lima"))))
                 .append("</p>")
                 .append("<div class=\"rule\"></div>");
 
@@ -88,15 +95,22 @@ public class SolicitudPdfService {
                         {"Ubicacion del evento", valor(s.location())},
                 }));
 
+        int horasBase = settings.baseHours();
+        String duracion = s.durationHours() < horasBase
+                ? s.durationHours() + " horas (minimo " + horasBase + " h cobradas)"
+                : s.durationHours() + " horas";
+        String equipo = s.bartenders() + (s.bartenders() == 1 ? " bartender" : " bartenders")
+                + (s.assistants() > 0
+                        ? " + " + s.assistants() + (s.assistants() == 1 ? " ayudante" : " ayudantes")
+                        : "");
+
         html.append("<h2>Detalles del evento</h2>")
                 .append(tabla(new String[][]{
                         {"Tipo de evento", s.eventTypeName()},
                         {"Fecha", fecha(s.eventDate()) + (s.eventTime() == null ? "" : " · " + s.eventTime() + " hrs")},
                         {"Invitados", s.guests() + " personas"},
-                        {"Duracion", s.durationHours() + " horas"},
-                        {"Nivel de servicio", "PREMIUM".equals(s.level())
-                                ? "Mixologia Premium" : "Mixologia Base"},
-                        {"Bartenders adicionales", String.valueOf(s.extraBartenders())},
+                        {"Duracion", duracion},
+                        {"Equipo asignado", equipo},
                         {"Notas / alergias", valor(s.notes())},
                 }));
 
@@ -110,19 +124,18 @@ public class SolicitudPdfService {
         }
         html.append("</ul>");
 
-        html.append("<h2>Desglose financiero</h2>")
-                .append(linea("Servicio Base (" + s.durationHours() + " horas)", dinero(s.breakdown().base())));
+        html.append("<h2>Desglose financiero (Soles)</h2>")
+                .append(linea("Bartenders (" + s.bartenders() + ")", monto(s.breakdown().base())));
         if (s.breakdown().premium().signum() > 0) {
-            html.append(linea("Menu Premium (" + s.guests() + " pax)", dinero(s.breakdown().premium())));
+            html.append(linea("Menu Premium (" + s.guests() + " pax)", monto(s.breakdown().premium())));
         }
-        if (s.breakdown().personal().signum() > 0) {
-            html.append(linea("Personal Adicional (" + s.extraBartenders() + " Bartenders)",
-                    dinero(s.breakdown().personal())));
+        if (s.assistants() > 0) {
+            html.append(linea("Ayudantes (" + s.assistants() + ")", monto(s.breakdown().personal())));
         }
         html.append("<div class=\"total\"><table><tr>")
                 .append("<td class=\"et\"><strong>Total Estimado</strong></td>")
                 .append("<td class=\"im\" style=\"text-align: right;\"><strong>")
-                .append(dinero(s.breakdown().total()))
+                .append(monto(s.breakdown().total()))
                 .append("</strong></td></tr></table></div>");
 
         html.append("<div class=\"pie\">Documento generado automaticamente por Velvet &amp; Gilt. ")
@@ -167,8 +180,19 @@ public class SolicitudPdfService {
         return Integer.parseInt(p[2]) + " de " + meses[Integer.parseInt(p[1]) - 1] + " de " + p[0];
     }
 
-    private String dinero(BigDecimal valor) {
-        java.text.NumberFormat formato = java.text.NumberFormat.getCurrencyInstance(new Locale("es", "MX"));
+    /** Monto en soles con la equivalencia en dolares al tipo de cambio configurado. */
+    private String monto(BigDecimal valorPen) {
+        BigDecimal tipoCambio = settings.exchangeRate();
+        BigDecimal usd = valorPen.divide(tipoCambio, 2, RoundingMode.HALF_UP);
+        return soles(valorPen) + " (USD aprox. " + decimales(usd) + ")";
+    }
+
+    private String soles(BigDecimal valor) {
+        return "S/ " + decimales(valor);
+    }
+
+    private String decimales(BigDecimal valor) {
+        java.text.NumberFormat formato = java.text.NumberFormat.getNumberInstance(new Locale("es", "PE"));
         formato.setMinimumFractionDigits(0);
         formato.setMaximumFractionDigits(2);
         return formato.format(valor);

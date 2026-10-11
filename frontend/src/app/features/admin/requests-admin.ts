@@ -5,6 +5,7 @@ import { ResumenSolicitudes, Solicitud } from '../../core/models/solicitud';
 import { AdminRequestsService } from '../../core/services/admin-requests';
 import { AuthService } from '../../core/services/auth';
 import { enlaceWhatsapp, mensajePaquete, telefonoLimpio } from '../../core/utils/whatsapp';
+import { montoDoble } from '../../core/utils/dinero';
 
 const POR_PAGINA = 10;
 
@@ -142,12 +143,7 @@ export class RequestsAdmin implements OnInit {
   }
 
   protected dinero(valor: number): string {
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: 'MXN',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(valor);
+    return montoDoble(valor);
   }
 
   protected fechaCorta(fecha: string): string {

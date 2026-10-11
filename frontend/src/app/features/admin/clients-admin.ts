@@ -4,6 +4,7 @@ import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { Cliente } from '../../core/models/client';
 import { AdminClientsService, ClientePayload } from '../../core/services/admin-clients';
 import { AuthService } from '../../core/services/auth';
+import { montoDoble } from '../../core/utils/dinero';
 
 const ETIQUETAS_TIER: Record<string, string> = {
   VIP: 'VIP',
@@ -128,11 +129,7 @@ export class ClientsAdmin implements OnInit {
   }
 
   protected dinero(valor: number): string {
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: 'MXN',
-      maximumFractionDigits: 0,
-    }).format(valor);
+    return montoDoble(valor);
   }
 
   protected abrirDetalles(cliente: Cliente): void {

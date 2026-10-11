@@ -40,7 +40,10 @@
         <span class="material-symbols-outlined">local_bar</span>
         <h3>Servicio Seleccionado</h3>
         <p>
-          {{ solicitud.level === 'PREMIUM' ? 'Mixología Premium' : 'Mixología Base' }}
+          {{ solicitud.bartenders }} bartender(s)
+          @if (solicitud.assistants > 0) {
+            · {{ solicitud.assistants }} ayudante(s)
+          }
           · {{ solicitud.eventTypeName }}
         </p>
       </div>
@@ -171,6 +174,7 @@
                 <label class="campo">
                   <span>Duración (horas)</span>
                   <input type="number" name="duracion" min="1" max="24" [(ngModel)]="durationHours" />
+                  <small class="ayuda-duracion">Servicio mínimo de {{ settings.horasBase() }} horas: si eliges menos, se cobra como {{ settings.horasBase() }}.</small>
                 </label>
                 <label class="campo">
                   <span>Fecha del evento</span>
@@ -206,12 +210,36 @@
               </div>
               <div class="fila">
                 <span>Duración</span>
-                <strong>{{ durationHours }} Horas</strong>
+                <strong>
+                  {{ horasCobradas() }} Horas
+                  @if (horasCobradas() > durationHours) {
+                    (mínimo)
+                  }
+                </strong>
               </div>
               <div class="fila">
                 <span>Fecha</span>
                 <strong>{{ fechaLegible(eventDate) }}</strong>
               </div>
+              <div class="fila">
+                <span>Equipo</span>
+                <strong>
+                  {{ equipo().bartenders }} {{ equipo().bartenders === 1 ? 'bartender' : 'bartenders' }}
+                  @if (equipo().assistants > 0) {
+                    + {{ equipo().assistants }} {{ equipo().assistants === 1 ? 'ayudante' : 'ayudantes' }}
+                  }
+                </strong>
+              </div>
+              <div class="fila">
+                <span>Bartenders ({{ equipo().bartenders }} × {{ horasCobradas() }} hrs)</span>
+                <strong>{{ dinero(desglose().base) }}</strong>
+              </div>
+              @if (equipo().assistants > 0) {
+                <div class="fila">
+                  <span>Ayudantes ({{ equipo().assistants }} × {{ horasCobradas() }} hrs)</span>
+                  <strong>{{ dinero(desglose().personal) }}</strong>
+                </div>
+              }
             </div>
             <div class="total">
               <span>Total Estimado</span>
@@ -369,24 +397,22 @@
             </form>
 
             <section class="nivel-servicio">
-              <h2 class="etiqueta-seccion">Nivel de Servicio</h2>
-              <div class="opciones-nivel">
-                <button class="opcion-nivel" [class.activa]="nivel === 'BASE'" type="button"
-                  (click)="nivel = 'BASE'">
-                  <span class="titulo">Base</span>
-                  <p>Bartender + coctelería base por hora e invitados.</p>
-                </button>
-                <button class="opcion-nivel" [class.activa]="nivel === 'PREMIUM'" type="button"
-                  (click)="nivel = 'PREMIUM'">
-                  <span class="titulo">Premium</span>
-                  <p>Carta ampliada de cócteles de autor e ingredientes premium.</p>
-                </button>
+              <h2 class="etiqueta-seccion">Equipo Asignado</h2>
+              <p class="equipo-nota">
+                El equipo se asigna automáticamente según el número de invitados.
+                No hay niveles ni costos por invitado: pagas por el equipo y las horas de barra.
+              </p>
+              <div class="equipo-resumen">
+                <strong>
+                  {{ equipo().bartenders }} {{ equipo().bartenders === 1 ? 'bartender' : 'bartenders' }}
+                </strong>
+                @if (equipo().assistants > 0) {
+                  <span> + </span>
+                  <strong>
+                    {{ equipo().assistants }} {{ equipo().assistants === 1 ? 'ayudante' : 'ayudantes' }}
+                  </strong>
+                }
               </div>
-
-              <label class="campo bartenders">
-                <span>Bartenders adicionales</span>
-                <input type="number" name="bartenders" min="0" max="20" [(ngModel)]="bartendersExtra" />
-              </label>
             </section>
           </section>
 
@@ -413,14 +439,24 @@
                   <span class="material-symbols-outlined">schedule</span>
                   <div>
                     <span class="etiqueta">Duración</span>
-                    <strong>{{ durationHours }} Horas</strong>
+                    <strong>
+                      {{ horasCobradas() }} Horas
+                      @if (horasCobradas() > durationHours) {
+                        (mínimo)
+                      }
+                    </strong>
                   </div>
                 </div>
                 <div class="spec">
                   <span class="material-symbols-outlined">local_bar</span>
                   <div>
-                    <span class="etiqueta">Nivel</span>
-                    <strong>{{ nivel === 'PREMIUM' ? 'Premium' : 'Base' }}</strong>
+                    <span class="etiqueta">Equipo</span>
+                    <strong>
+                      {{ equipo().bartenders }} {{ equipo().bartenders === 1 ? 'bartender' : 'bartenders' }}
+                      @if (equipo().assistants > 0) {
+                        + {{ equipo().assistants }} {{ equipo().assistants === 1 ? 'ayudante' : 'ayudantes' }}
+                      }
+                    </strong>
                   </div>
                 </div>
               </div>
@@ -448,7 +484,10 @@
 
               <div class="precios">
                 <div class="precio-fila">
-                  <span>Servicio Base ({{ durationHours }}hrs, {{ guests }} pax)</span>
+                  <span>
+                    Bartenders ({{ equipo().bartenders }},
+                    {{ horasCobradas() }} hrs)
+                  </span>
                   <span>{{ dinero(desglose().base) }}</span>
                 </div>
                 @if (desglose().premium > 0) {
@@ -457,10 +496,12 @@
                     <span>{{ dinero(desglose().premium) }}</span>
                   </div>
                 }
-                @if (desglose().personal > 0) {
+                @if (equipo().assistants > 0) {
                   <div class="precio-fila">
-                    <span>Personal Adicional ({{ bartendersExtra }}
-                      {{ bartendersExtra === 1 ? 'bartender' : 'bartenders' }})</span>
+                    <span>
+                      Ayudantes ({{ equipo().assistants }},
+                      {{ horasCobradas() }} hrs)
+                    </span>
                     <span>{{ dinero(desglose().personal) }}</span>
                   </div>
                 }

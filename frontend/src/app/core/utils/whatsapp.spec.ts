@@ -1,4 +1,5 @@
 import { Solicitud } from '../models/solicitud';
+import { setTipoCambio } from './dinero';
 import {
   WHATSAPP_OWNER,
   enlaceConDueno,
@@ -23,9 +24,11 @@ function solicitudEjemplo(): Solicitud {
     durationHours: 5,
     location: 'Polanco, CDMX',
     notes: null,
-    level: 'PREMIUM',
-    extraBartenders: 2,
-    breakdown: { base: 2400, premium: 480, personal: 250, total: 3130 },
+    level: 'BASE',
+    extraBartenders: 0,
+    bartenders: 2,
+    assistants: 1,
+    breakdown: { base: 624, premium: 0, personal: 190, total: 814 },
     cocktails: [
       { id: 1, name: 'Margarita de Bergamota', ingredients: '', imageUrl: null, category: 'SIGNATURE' },
       { id: 2, name: 'Paloma Rosa', ingredients: '', imageUrl: null, category: 'CITRICOS' },
@@ -59,8 +62,11 @@ describe('whatsapp utils', () => {
     expect(mensaje).toContain('20 de Noviembre, 2026');
     expect(mensaje).toContain('Polanco, CDMX');
     expect(mensaje).toContain('Margarita de Bergamota, Paloma Rosa');
-    expect(mensaje).toContain('Menu Premium');
-    expect(mensaje).toContain('$3,130');
+    expect(mensaje).toContain('Equipo: 2 bartender(s), 1 ayudante(s)');
+    expect(mensaje).toContain('Bartenders: S/ 624');
+    expect(mensaje).toContain('Ayudantes: S/ 190');
+    expect(mensaje).toContain('S/ 814');
+    expect(mensaje).toContain('US$ 239.41');
     expect(mensaje).toContain('/solicitud/abc123');
   });
 
@@ -76,7 +82,9 @@ describe('whatsapp utils', () => {
     expect(mensaje).toContain('Bodas');
     expect(mensaje).toContain('20 de Noviembre, 2026');
     expect(mensaje).toContain('Polanco, CDMX');
-    expect(mensaje).toContain('$3,130');
+    expect(mensaje).toContain('Equipo: 2 bartender(s), 1 ayudante(s)');
+    expect(mensaje).toContain('S/ 814');
+    expect(mensaje).toContain('US$ 239.41');
     expect(mensaje).toContain('/solicitud/abc123');
     expect(mensaje.startsWith('Hola Ana Lopez')).toBe(false);
   });
@@ -92,5 +100,13 @@ describe('whatsapp utils', () => {
   it('should ignore an invalid owner number', () => {
     setDuenoWhatsapp('12');
     expect(enlaceConDueno('hola')).toBe('https://wa.me/51937336603?text=hola');
+  });
+
+  it('should convert soles to dollars with the configured exchange rate', () => {
+    setTipoCambio(4);
+    expect(mensajeParaDueno(solicitudEjemplo())).toContain('US$ 203.5');
+
+    setTipoCambio(3.4);
+    expect(mensajeParaDueno(solicitudEjemplo())).toContain('US$ 239.41');
   });
 });

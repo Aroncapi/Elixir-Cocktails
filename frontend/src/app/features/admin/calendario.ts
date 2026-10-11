@@ -55,8 +55,9 @@ export class Calendario implements OnInit {
     const hoy = this.hoy();
 
     const porFecha = new Map<string, EventoCalendario[]>();
+    const filtro = this.estadoFiltro();
     for (const evento of this.eventos()) {
-      if (this.estadoFiltro() !== '' && evento.status !== this.estadoFiltro()) {
+      if (filtro === '' ? evento.status === 'CANCELADO' : evento.status !== filtro) {
         continue;
       }
       const lista = porFecha.get(evento.eventDate) ?? [];
@@ -141,15 +142,6 @@ export class Calendario implements OnInit {
 
   protected hora(evento: EventoCalendario): string {
     return evento.eventTime ?? '';
-  }
-
-  protected dinero(valor: number): string {
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: 'MXN',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(valor);
   }
 
   protected alternarMenu(): void {

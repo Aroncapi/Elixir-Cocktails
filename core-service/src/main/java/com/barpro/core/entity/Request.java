@@ -70,6 +70,12 @@ public class Request {
     @Column(name = "extra_bartenders", nullable = false)
     private int extraBartenders;
 
+    @Column(nullable = false)
+    private int bartenders = 1;
+
+    @Column(nullable = false)
+    private int assistants;
+
     @Column(name = "base_amount", nullable = false, precision = 12, scale = 2)
     private BigDecimal baseAmount = BigDecimal.ZERO;
 

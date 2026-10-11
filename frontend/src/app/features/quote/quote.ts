@@ -1,10 +1,12 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Cocktail } from '../../core/models/cocktail';
 import { Desglose, ServiceTier, Solicitud, SolicitudPayload } from '../../core/models/solicitud';
 import { CatalogService } from '../../core/services/catalog';
+import { SettingsService } from '../../core/services/settings';
 import { SolicitudesService } from '../../core/services/solicitudes';
+import { montoDoble } from '../../core/utils/dinero';
 import { enlaceConDueno, mensajeParaDueno } from '../../core/utils/whatsapp';
 
 export interface TipoEvento {
@@ -26,6 +28,33 @@ const MESES = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ];
 
+/** Primer numero de invitados en el que entra cada bartender adicional. */
+const BARTENDER_STEPS = [55, 120, 180, 231, 271, 331, 371, 431, 481];
+/** Invitados que suma cada bartender adicional despues de la tabla. */
+const BARTENDER_STEP_TAIL = 50;
+/** Primer numero de invitados en el que entra cada ayudante adicional. */
+const ASSISTANT_STEPS = [100, 150, 271, 371, 481];
+/** Invitados que suma cada ayudante adicional despues de la tabla. */
+const ASSISTANT_STEP_TAIL = 100;
+
+/** Cuenta cuantos umbrales alcanza el numero de invitados (+ base inicial). */
+function contar(guests: number, steps: number[], tail: number, base: number): number {
+  let total = base;
+  let ultimoUmbral = 0;
+  for (const umbral of steps) {
+    if (guests >= umbral) {
+      total++;
+      ultimoUmbral = umbral;
+    } else {
+      break;
+    }
+  }
+  if (ultimoUmbral === steps[steps.length - 1]) {
+    total += Math.floor((guests - ultimoUmbral) / tail);
+  }
+  return total;
+}
+
 @Component({
   imports: [FormsModule, RouterLink],
   selector: 'app-quote',
@@ -35,6 +64,7 @@ const MESES = [
 export class Quote implements OnInit {
   private readonly catalogo = inject(CatalogService);
   private readonly solicitudes = inject(SolicitudesService);
+  protected readonly settings = inject(SettingsService);
 
   protected readonly paso = signal(1);
   protected readonly confirmada = signal<Solicitud | null>(null);
@@ -60,9 +90,6 @@ export class Quote implements OnInit {
   protected durationHours = 4;
   protected eventDate = '';
   protected eventTime = '';
-
-  protected nivel: 'BASE' | 'PREMIUM' = 'BASE';
-  protected bartendersExtra = 0;
 
   protected nombre = '';
   protected whatsapp = '';
@@ -106,26 +133,43 @@ export class Quote implements OnInit {
     return this.tiers().find((t) => t.code === code)?.price ?? porDefecto;
   }
 
+  /** Horas realmente cobradas: siempre el minimo del paquete base. */
+  protected horasCobradas = computed(() => Math.max(this.durationHours, this.settings.horasBase()));
+
+  /** Equipo asignado automaticamente segun el numero de invitados. */
+  protected equipo = computed(() => {
+    const masterclass = this.nombreTipo()?.code === 'MASTERCLASS';
+    if (masterclass) {
+      return { bartenders: 1, assistants: this.guests >= 60 ? 1 : 0 };
+    }
+    const g = this.guests;
+    return {
+      bartenders: contar(g, BARTENDER_STEPS, BARTENDER_STEP_TAIL, 1),
+      assistants: contar(g, ASSISTANT_STEPS, ASSISTANT_STEP_TAIL, 0),
+    };
+  });
+
   protected desglose(): Desglose {
-    const base = this.precio('BASE', 6) * this.guests * this.durationHours;
-    const premium = this.nivel === 'PREMIUM' ? this.precio('PREMIUM', 6) * this.guests : 0;
-    const personal = this.precio('PERSONAL', 25) * this.durationHours * this.bartendersExtra;
+    const horasExtra = this.horasCobradas() - this.settings.horasBase();
+    const extra = this.settings.horaExtra();
+    const { bartenders, assistants } = this.equipo();
+
+    const porBartender = this.precio('BASE', 272) + extra * horasExtra;
+    const porAyudante = this.precio('PERSONAL', 150) + extra * horasExtra;
+
+    const base = porBartender * bartenders;
+    const personal = porAyudante * assistants;
     const redondear = (v: number) => Math.round(v * 100) / 100;
     return {
       base: redondear(base),
-      premium: redondear(premium),
+      premium: 0,
       personal: redondear(personal),
-      total: redondear(base + premium + personal),
+      total: redondear(base + personal),
     };
   }
 
   protected dinero(valor: number): string {
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: 'MXN',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(valor);
+    return montoDoble(valor);
   }
 
   protected pdfLink(solicitud: Solicitud): string {
@@ -295,8 +339,8 @@ export class Quote implements OnInit {
       durationHours: this.durationHours,
       location: limpio(this.ubicacion),
       notes: limpio(this.notas) || null,
-      level: this.nivel,
-      extraBartenders: this.bartendersExtra,
+      level: 'BASE',
+      extraBartenders: 0,
       cocktailIds: this.seleccion(),
       clientName: limpio(this.nombre),
       clientWhatsapp: limpio(this.whatsapp),
@@ -331,8 +375,6 @@ export class Quote implements OnInit {
     this.email = '';
     this.ubicacion = '';
     this.notas = '';
-    this.nivel = 'BASE';
-    this.bartendersExtra = 0;
     this.validacionPaso1 = '';
     this.validacionPaso2 = '';
     this.validacionPaso3 = '';
@@ -350,8 +392,8 @@ export class Quote implements OnInit {
         `Fecha: ${this.fechaLegible(this.eventDate)}`,
         `Tipo: ${this.nombreTipo()?.name ?? ''}`,
         `Invitados: ${this.guests}`,
-        `Duración: ${this.durationHours} horas`,
-        `Nivel: ${this.nivel === 'PREMIUM' ? 'Premium' : 'Base'}`,
+        `Duracion: ${this.horasCobradas()} horas`,
+        `Equipo: ${this.equipo().bartenders} bartender(s), ${this.equipo().assistants} ayudante(s)`,
         `Cócteles: ${this.seleccionados().map((c) => c.name).join(', ')}`,
         `Total estimado: ${this.dinero(this.desglose().total)}`,
         '',

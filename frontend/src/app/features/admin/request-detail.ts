@@ -5,6 +5,7 @@ import { Solicitud } from '../../core/models/solicitud';
 import { AdminRequestsService } from '../../core/services/admin-requests';
 import { AuthService } from '../../core/services/auth';
 import { enlaceWhatsapp, mensajePaquete, telefonoLimpio } from '../../core/utils/whatsapp';
+import { montoDoble } from '../../core/utils/dinero';
 
 const ESTADOS = ['PENDIENTE', 'CONFIRMADO', 'CANCELADO'];
 
@@ -123,12 +124,7 @@ export class RequestDetail implements OnInit {
   }
 
   protected dinero(valor: number): string {
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: 'MXN',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(valor);
+    return montoDoble(valor);
   }
 
   protected fechaLarga(fecha: string): string {
@@ -149,8 +145,16 @@ export class RequestDetail implements OnInit {
     return solicitud.eventTime ? `${fecha} • ${solicitud.eventTime} hrs` : fecha;
   }
 
-  protected nivelTexto(): string {
-    return this.solicitud()?.level === 'PREMIUM' ? 'Menu Premium' : 'Servicio Base';
+  protected equipoTexto(): string {
+    const solicitud = this.solicitud();
+    if (!solicitud) {
+      return '';
+    }
+    const bartenders = `${solicitud.bartenders} ${solicitud.bartenders === 1 ? 'bartender' : 'bartenders'}`;
+    const ayudantes = solicitud.assistants > 0
+      ? ` + ${solicitud.assistants} ${solicitud.assistants === 1 ? 'ayudante' : 'ayudantes'}`
+      : '';
+    return bartenders + ayudantes;
   }
 
   protected alternarMenu(): void {

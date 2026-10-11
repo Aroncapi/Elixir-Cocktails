@@ -23,6 +23,7 @@ export class Configuracion implements OnInit {
   protected whatsapp = '';
   protected contactEmail = '';
   protected businessName = '';
+  protected exchangeRate = 3.4;
 
   ngOnInit(): void {
     this.settings.consultar().subscribe({
@@ -30,6 +31,7 @@ export class Configuracion implements OnInit {
         this.whatsapp = settings.whatsappOwner;
         this.contactEmail = settings.contactEmail;
         this.businessName = settings.businessName;
+        this.exchangeRate = settings.exchangeRate;
       },
       error: () => this.error.set('No se pudo cargar la configuracion.'),
     });
@@ -49,6 +51,10 @@ export class Configuracion implements OnInit {
       this.error.set('El WhatsApp del negocio es obligatorio.');
       return;
     }
+    if (!Number.isFinite(this.exchangeRate) || this.exchangeRate <= 0) {
+      this.error.set('El tipo de cambio debe ser un numero mayor a cero.');
+      return;
+    }
 
     this.error.set('');
     this.guardado.set(false);
@@ -59,12 +65,14 @@ export class Configuracion implements OnInit {
         whatsappOwner: this.whatsapp.trim(),
         contactEmail: this.contactEmail.trim(),
         businessName: this.businessName.trim(),
+        exchangeRate: this.exchangeRate,
       })
       .subscribe({
         next: (settings) => {
           this.whatsapp = settings.whatsappOwner;
           this.contactEmail = settings.contactEmail;
           this.businessName = settings.businessName;
+          this.exchangeRate = settings.exchangeRate;
           this.guardando.set(false);
           this.guardado.set(true);
           setTimeout(() => this.guardado.set(false), 3000);

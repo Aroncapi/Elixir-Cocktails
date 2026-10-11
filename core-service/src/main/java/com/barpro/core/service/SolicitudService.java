@@ -46,6 +46,17 @@ public class SolicitudService {
     private static final Map<RequestStatus, Set<RequestStatus>> TRANSICIONES =
             new EnumMap<>(RequestStatus.class);
 
+    /** Primer numero de invitados en el que entra cada bartender adicional. */
+    private static final int[] BARTENDER_STEPS = {55, 120, 180, 231, 271, 331, 371, 431, 481};
+    /** Invitados que suma cada bartender adicional despues de la tabla. */
+    private static final int BARTENDER_STEP_TAIL = 50;
+    /** Primer numero de invitados en el que entra cada ayudante adicional. */
+    private static final int[] ASSISTANT_STEPS = {100, 150, 271, 371, 481};
+    /** Invitados que suma cada ayudante adicional despues de la tabla. */
+    private static final int ASSISTANT_STEP_TAIL = 100;
+
+    private static final int MASTERCLASS_ASSISTANTS_FROM = 60;
+
     static {
         TRANSICIONES.put(RequestStatus.PENDIENTE,
                 EnumSet.of(RequestStatus.CONFIRMADO, RequestStatus.CANCELADO));
@@ -61,19 +72,22 @@ public class SolicitudService {
     private final ServiceTierRepository tiers;
     private final ClientRepository clients;
     private final NotificationClient notificaciones;
+    private final SettingsService settings;
 
     public SolicitudService(RequestRepository requests,
                             EventTypeRepository eventTypes,
                             CocktailRepository cocktails,
                             ServiceTierRepository tiers,
                             ClientRepository clients,
-                            NotificationClient notificaciones) {
+                            NotificationClient notificaciones,
+                            SettingsService settings) {
         this.requests = requests;
         this.eventTypes = eventTypes;
         this.cocktails = cocktails;
         this.tiers = tiers;
         this.clients = clients;
         this.notificaciones = notificaciones;
+        this.settings = settings;
     }
 
     @Transactional
@@ -251,25 +265,79 @@ public class SolicitudService {
                 });
     }
 
+    /**
+     * Modelo de precios en soles: equipo automatico por numero de invitados,
+     * minimo {@code base_hours} horas cobradas y hora extra a precio fijo.
+     * El nivel del payload se ignora (ya no existe PREMIUM).
+     */
     private void price(Request solicitud) {
-        BigDecimal porPersonaHora = priceOf("BASE");
-        BigDecimal porPersona = priceOf("PREMIUM");
-        BigDecimal porBartenderHora = priceOf("PERSONAL");
+        int horasBase = settings.baseHours();
+        int horasCobradas = Math.max(solicitud.getDurationHours(), horasBase);
+        int horasExtra = horasCobradas - horasBase;
 
-        BigDecimal base = porPersonaHora
-                .multiply(BigDecimal.valueOf(solicitud.getGuests()))
-                .multiply(BigDecimal.valueOf(solicitud.getDurationHours()));
-        BigDecimal premium = solicitud.getLevel() == RequestLevel.PREMIUM
-                ? porPersona.multiply(BigDecimal.valueOf(solicitud.getGuests()))
-                : BigDecimal.ZERO;
-        BigDecimal personal = porBartenderHora
-                .multiply(BigDecimal.valueOf(solicitud.getDurationHours()))
-                .multiply(BigDecimal.valueOf(solicitud.getExtraBartenders()));
+        boolean masterclass = "MASTERCLASS".equals(solicitud.getEventType().getCode());
+        int bartenders;
+        int assistants;
+        if (masterclass) {
+            bartenders = 1;
+            assistants = solicitud.getGuests() >= MASTERCLASS_ASSISTANTS_FROM ? 1 : 0;
+        } else {
+            bartenders = porInvitadosBartenders(solicitud.getGuests());
+            assistants = porInvitadosAyudantes(solicitud.getGuests());
+        }
 
+        BigDecimal extraHour = settings.extraHourPen();
+        BigDecimal extras = BigDecimal.valueOf(horasExtra);
+        BigDecimal porBartender = priceOf("BASE").add(extraHour.multiply(extras));
+        BigDecimal porAyudante = priceOf("PERSONAL").add(extraHour.multiply(extras));
+
+        BigDecimal base = porBartender.multiply(BigDecimal.valueOf(bartenders));
+        BigDecimal personal = porAyudante.multiply(BigDecimal.valueOf(assistants));
+
+        solicitud.setBartenders(bartenders);
+        solicitud.setAssistants(assistants);
+        solicitud.setLevel(RequestLevel.BASE);
+        solicitud.setExtraBartenders(0);
         solicitud.setBaseAmount(round(base));
-        solicitud.setPremiumAmount(round(premium));
+        solicitud.setPremiumAmount(BigDecimal.ZERO);
         solicitud.setPersonalAmount(round(personal));
-        solicitud.setTotalAmount(round(base.add(premium).add(personal)));
+        solicitud.setTotalAmount(round(base.add(personal)));
+    }
+
+    /** Bartenders por numero de invitados (eventos normales). */
+    private int porInvitadosBartenders(int guests) {
+        int bartenders = 1;
+        int ultimoUmbral = 0;
+        for (int umbral : BARTENDER_STEPS) {
+            if (guests >= umbral) {
+                bartenders++;
+                ultimoUmbral = umbral;
+            } else {
+                break;
+            }
+        }
+        if (ultimoUmbral == BARTENDER_STEPS[BARTENDER_STEPS.length - 1]) {
+            bartenders += (guests - ultimoUmbral) / BARTENDER_STEP_TAIL;
+        }
+        return bartenders;
+    }
+
+    /** Ayudantes por numero de invitados (eventos normales). */
+    private int porInvitadosAyudantes(int guests) {
+        int assistants = 0;
+        int ultimoUmbral = 0;
+        for (int umbral : ASSISTANT_STEPS) {
+            if (guests >= umbral) {
+                assistants++;
+                ultimoUmbral = umbral;
+            } else {
+                break;
+            }
+        }
+        if (ultimoUmbral == ASSISTANT_STEPS[ASSISTANT_STEPS.length - 1]) {
+            assistants += (guests - ultimoUmbral) / ASSISTANT_STEP_TAIL;
+        }
+        return assistants;
     }
 
     private BigDecimal priceOf(String code) {

@@ -46,6 +46,8 @@ class SolicitudServiceTransicionesTests {
     private ClientRepository clients;
     @Mock
     private NotificationClient notificaciones;
+    @Mock
+    private SettingsService settings;
     @InjectMocks
     private SolicitudService service;
 
