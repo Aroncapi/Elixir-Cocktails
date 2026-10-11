@@ -33,7 +33,7 @@ services:
     environment:
       EUREKA_INSTANCE_HOSTNAME: eureka
     healthcheck:
-      test: [ "CMD-SHELL", "wget -qO- http://localhost:8761/actuator/health || exit 1" ]
+      test: [ "CMD-SHELL", "curl -fsS http://localhost:8761/actuator/health || exit 1" ]
       interval: 15s
       timeout: 5s
       retries: 20
@@ -76,6 +76,9 @@ services:
       APP_NOTIFICATIONS_URL: http://notification:8083/api/notifications
       APP_PUBLIC_URL: ${PUBLIC_URL:-http://localhost}
       APP_ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@velvet.mx}
+      APP_UPLOAD_DIR: /data/uploads
+    volumes:
+      - uploads_data:/data/uploads
 
   notification:
     build:
@@ -123,3 +126,4 @@ services:
 
 volumes:
   mysql_data:
+  uploads_data:

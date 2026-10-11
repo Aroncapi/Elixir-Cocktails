@@ -766,6 +766,42 @@
   border-bottom-color: var(--dorado);
 }
 
+.zona-imagen .btn-subir {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 16px;
+  background: transparent;
+  border: 1px solid var(--dorado);
+  color: var(--dorado);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  user-select: none;
+}
+
+.zona-imagen .btn-subir:hover {
+  background: rgba(212, 175, 55, 0.1);
+}
+
+.zona-imagen .btn-subir .material-symbols-outlined {
+  font-size: 16px;
+}
+
+.zona-imagen .btn-subir input {
+  display: none;
+}
+
+.zona-imagen .btn-subir:has(input:disabled) {
+  opacity: 0.5;
+  cursor: wait;
+}
+
 .zona-formulario {
   display: flex;
   flex: 1;

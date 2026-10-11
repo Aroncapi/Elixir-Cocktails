@@ -193,21 +193,37 @@
         <div class="zona-imagen">
           <label>Imagen del Cóctel</label>
           <div class="zona-dashed">
-            @if (formulario.imageUrl) {
+            @if (subiendo()) {
+              <div class="placeholder">
+                <span class="material-symbols-outlined">progress_activity</span>
+                <p>Subiendo foto...</p>
+              </div>
+            } @else if (formulario.imageUrl) {
               <img [src]="formulario.imageUrl" alt="Vista previa" />
             } @else {
               <div class="placeholder">
                 <span class="material-symbols-outlined">add_a_photo</span>
-                <p>Pega la URL de la imagen</p>
-                <small>JPG, PNG o WEBP</small>
+                <p>Sube una foto o pega una URL</p>
+                <small>JPG, PNG o WEBP · máx. 5 MB</small>
               </div>
             }
           </div>
+          <label class="btn-subir">
+            <span class="material-symbols-outlined">upload</span>
+            {{ subiendo() ? 'Subiendo...' : 'Subir foto desde mi equipo' }}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              (change)="subirFoto($event)"
+              [disabled]="subiendo()"
+            />
+          </label>
           <input
             type="url"
-            placeholder="https://..."
+            placeholder="o pega una URL: https://..."
             [(ngModel)]="formulario.imageUrl"
             (ngModelChange)="formulario.imageUrl = $event || null"
+            [disabled]="subiendo()"
           />
         </div>
 

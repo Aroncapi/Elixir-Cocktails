@@ -33,3 +33,6 @@ frontend/.vscode/
 *.log
 .DS_Store
 Thumbs.db
+
+# Subidas de imagenes (fotos de cocteles; viven en el volumen Docker)
+uploads/

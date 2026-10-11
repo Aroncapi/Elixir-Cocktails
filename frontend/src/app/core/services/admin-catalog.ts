@@ -43,4 +43,10 @@ export class AdminCatalogService {
   deactivate(id: number): Observable<Cocktail> {
     return this.http.delete<Cocktail>(`/api/cocktails/${id}`);
   }
+
+  uploadImage(file: File): Observable<{ url: string }> {
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    return this.http.post<{ url: string }>('/api/files', formData);
+  }
 }

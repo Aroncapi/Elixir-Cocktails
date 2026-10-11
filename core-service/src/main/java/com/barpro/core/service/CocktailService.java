@@ -22,10 +22,13 @@ public class CocktailService {
 
     private final CocktailRepository cocktails;
     private final EventTypeRepository eventTypes;
+    private final FileStorageService files;
 
-    public CocktailService(CocktailRepository cocktails, EventTypeRepository eventTypes) {
+    public CocktailService(CocktailRepository cocktails, EventTypeRepository eventTypes,
+                           FileStorageService files) {
         this.cocktails = cocktails;
         this.eventTypes = eventTypes;
+        this.files = files;
     }
 
     public List<CocktailResponse> listAdmin() {
@@ -63,8 +66,13 @@ public class CocktailService {
                 .ifPresent(other -> {
                     throw new ConflictException("Ya existe un coctel con el nombre " + request.name());
                 });
+        String imagenAnterior = cocktail.getImageUrl();
         apply(cocktail, request);
-        return CocktailResponse.from(cocktails.save(cocktail));
+        Cocktail guardado = cocktails.save(cocktail);
+        if (imagenAnterior != null && !imagenAnterior.equals(guardado.getImageUrl())) {
+            files.deleteIfLocal(imagenAnterior);
+        }
+        return CocktailResponse.from(guardado);
     }
 
     @Transactional

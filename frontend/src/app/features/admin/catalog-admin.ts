@@ -35,6 +35,7 @@ export class CatalogAdmin implements OnInit {
   protected readonly menuAbierto = signal(false);
   protected readonly modalAbierto = signal(false);
   protected readonly guardando = signal(false);
+  protected readonly subiendo = signal(false);
   protected readonly errorModal = signal('');
   protected readonly editandoId = signal<number | null>(null);
 
@@ -161,6 +162,29 @@ export class CatalogAdmin implements OnInit {
       error: (err) => {
         this.guardando.set(false);
         this.errorModal.set(this.mensajeError(err, 'No se pudo guardar el cóctel.'));
+      },
+    });
+  }
+
+  protected subirFoto(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const archivo = input.files?.[0];
+    input.value = '';
+    if (!archivo) {
+      return;
+    }
+
+    this.subiendo.set(true);
+    this.errorModal.set('');
+
+    this.servicio.uploadImage(archivo).subscribe({
+      next: (res) => {
+        this.subiendo.set(false);
+        this.formulario = { ...this.formulario, imageUrl: res.url };
+      },
+      error: (err) => {
+        this.subiendo.set(false);
+        this.errorModal.set(this.mensajeError(err, 'No se pudo subir la imagen.'));
       },
     });
   }
