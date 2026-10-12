@@ -6,6 +6,7 @@ import { Cocktail } from '../models/cocktail';
 export interface CocktailPayload {
   name: string;
   category: string;
+  spirit: string | null;
   ingredients: string;
   imageUrl: string | null;
   active: boolean;
