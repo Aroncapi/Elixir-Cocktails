@@ -20,7 +20,8 @@ export class AuthService {
   readonly usuario = signal<Usuario | null>(this.leerUsuario());
 
   get autenticado(): boolean {
-    return this.token() !== null;
+    const token = this.token();
+    return token !== null && !this.expirado(token);
   }
 
   get esAdmin(): boolean {
@@ -54,6 +55,22 @@ export class AuthService {
       return JSON.parse(dato) as Usuario;
     } catch {
       return null;
+    }
+  }
+
+  /** Lee el campo exp del JWT sin verificar la firma (solo para no mostrar sesiones vencidas). */
+  private expirado(token: string): boolean {
+    const parte = token.split('.')[1];
+    if (!parte) {
+      return true;
+    }
+    try {
+      const payload = JSON.parse(atob(parte.replace(/-/g, '+').replace(/_/g, '/'))) as {
+        exp?: number;
+      };
+      return typeof payload.exp === 'number' && payload.exp * 1000 < Date.now();
+    } catch {
+      return true;
     }
   }
 }

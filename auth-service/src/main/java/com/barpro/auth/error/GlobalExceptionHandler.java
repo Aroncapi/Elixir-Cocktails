@@ -40,6 +40,12 @@ public class GlobalExceptionHandler {
                 .body(ApiError.of(401, "Unauthorized", "Credenciales invalidas"));
     }
 
+    @ExceptionHandler(TooManyAttemptsException.class)
+    public ResponseEntity<ApiError> onTooManyAttempts(TooManyAttemptsException ex) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .body(ApiError.of(429, "Too Many Requests", ex.getMessage()));
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiError> onIllegalArgument(IllegalArgumentException ex) {
         return ResponseEntity.badRequest()

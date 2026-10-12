@@ -57,7 +57,7 @@ services:
       EUREKA_INSTANCE_HOSTNAME: auth
       JWT_SECRET: '${JWT_SECRET:?JWT_SECRET obligatorio (openssl rand -base64 48)}'
       # Password del admin seed en la BD nueva (cambiar en produccion)
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+      ADMIN_PASSWORD: '${ADMIN_PASSWORD:?ADMIN_PASSWORD es obligatorio}'
 
   core:
     build:

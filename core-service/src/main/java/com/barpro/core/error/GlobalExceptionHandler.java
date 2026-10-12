@@ -39,6 +39,12 @@ public class GlobalExceptionHandler {
                 .body(ApiError.of(409, "Conflict", ex.getMessage()));
     }
 
+    @ExceptionHandler(TooManyRequestsException.class)
+    public ResponseEntity<ApiError> onTooManyRequests(TooManyRequestsException ex) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .body(ApiError.of(429, "Too Many Requests", ex.getMessage()));
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiError> onIllegalArgument(IllegalArgumentException ex) {
         return ResponseEntity.badRequest()

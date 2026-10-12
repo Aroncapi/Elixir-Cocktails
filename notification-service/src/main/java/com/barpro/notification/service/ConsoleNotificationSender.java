@@ -25,11 +25,22 @@ public class ConsoleNotificationSender implements NotificationSender {
 
     @Override
     public void send(Notification notification) {
-        LOG.info("[NOTIFICACION][{}] {} -> {} | {}\n{}",
+        // Sin datos personales en claro: el destinatario se enmascara y el cuerpo no se loguea.
+        LOG.info("[NOTIFICACION][{}] {} -> {} | {}",
                 transport(),
                 notification.getChannel(),
-                notification.getRecipient(),
-                notification.getSubject(),
-                notification.getBody());
+                enmascarar(notification.getRecipient()),
+                notification.getSubject());
+    }
+
+    private String enmascarar(String email) {
+        if (email == null || email.isBlank()) {
+            return "-";
+        }
+        int arroba = email.indexOf('@');
+        if (arroba <= 0) {
+            return "***";
+        }
+        return email.charAt(0) + "***" + email.substring(arroba);
     }
 }

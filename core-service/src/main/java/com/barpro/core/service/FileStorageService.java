@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -57,14 +56,48 @@ public class FileStorageService {
         if (!TIPOS_PERMITIDOS.contains(contentType)) {
             throw new IllegalArgumentException("Formato no permitido: usa JPG, PNG, WEBP o GIF");
         }
+        byte[] bytes;
+        try {
+            bytes = file.getBytes();
+        } catch (IOException ex) {
+            throw new UncheckedIOException("No se pudo leer la imagen", ex);
+        }
+        if (!coincideFirma(contentType, bytes)) {
+            throw new IllegalArgumentException("El contenido del archivo no coincide con una imagen " + contentType);
+        }
         String extension = extensionDe(contentType, file.getOriginalFilename());
         String nombre = "img-" + UUID.randomUUID() + "." + extension;
         try {
-            Files.copy(file.getInputStream(), baseDir.resolve(nombre), StandardCopyOption.REPLACE_EXISTING);
+            Files.write(baseDir.resolve(nombre), bytes);
         } catch (IOException ex) {
             throw new UncheckedIOException("No se pudo guardar la imagen", ex);
         }
         return PUBLIC_PREFIX + nombre;
+    }
+
+    /**
+     * Verifica los primeros bytes del archivo (magic bytes) contra el tipo declarado,
+     * para no confiar solo en el Content-Type que manda el cliente.
+     */
+    private boolean coincideFirma(String contentType, byte[] bytes) {
+        if (bytes == null || bytes.length < 12) {
+            return false;
+        }
+        return switch (contentType) {
+            case "image/jpeg" ->
+                    (bytes[0] & 0xFF) == 0xFF && (bytes[1] & 0xFF) == 0xD8 && (bytes[2] & 0xFF) == 0xFF;
+            case "image/png" ->
+                    (bytes[0] & 0xFF) == 0x89 && bytes[1] == 'P' && bytes[2] == 'N' && bytes[3] == 'G'
+                    && (bytes[4] & 0xFF) == 0x0D && (bytes[5] & 0xFF) == 0x0A
+                    && (bytes[6] & 0xFF) == 0x1A && (bytes[7] & 0xFF) == 0x0A;
+            case "image/gif" ->
+                    bytes[0] == 'G' && bytes[1] == 'I' && bytes[2] == 'F' && bytes[3] == '8'
+                    && (bytes[4] == '7' || bytes[4] == '9') && bytes[5] == 'a';
+            case "image/webp" ->
+                    bytes[0] == 'R' && bytes[1] == 'I' && bytes[2] == 'F' && bytes[3] == 'F'
+                    && bytes[8] == 'W' && bytes[9] == 'E' && bytes[10] == 'B' && bytes[11] == 'P';
+            default -> false;
+        };
     }
 
     public Path resolve(String nombre) {

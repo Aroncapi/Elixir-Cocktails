@@ -2,8 +2,11 @@ package com.barpro.core.web.publicapi;
 
 import com.barpro.core.dto.SolicitudRequest;
 import com.barpro.core.dto.SolicitudResponse;
+import com.barpro.core.error.TooManyRequestsException;
+import com.barpro.core.security.IpRateLimiter;
 import com.barpro.core.service.SolicitudPdfService;
 import com.barpro.core.service.SolicitudService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -24,16 +27,27 @@ public class PublicSolicitudController {
 
     private final SolicitudService solicitudService;
     private final SolicitudPdfService pdfService;
+    private final IpRateLimiter rateLimiter;
 
     public PublicSolicitudController(SolicitudService solicitudService,
-                                     SolicitudPdfService pdfService) {
+                                     SolicitudPdfService pdfService,
+                                     IpRateLimiter rateLimiter) {
         this.solicitudService = solicitudService;
         this.pdfService = pdfService;
+        this.rateLimiter = rateLimiter;
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public SolicitudResponse create(@Valid @RequestBody SolicitudRequest request) {
+    public SolicitudResponse create(@Valid @RequestBody SolicitudRequest request,
+                                    HttpServletRequest http) {
+        String ip = ipDe(http);
+        if (!rateLimiter.permitido(ip)) {
+            throw new TooManyRequestsException(
+                    "Demasiadas solicitudes en poco tiempo. Intenta de nuevo en unos minutos.");
+        }
+        // Se cuenta antes de crear: un intento fallido también consume el cupo.
+        rateLimiter.registrarUso(ip);
         return solicitudService.create(request);
     }
 
@@ -56,5 +70,14 @@ public class PublicSolicitudController {
                 .filename(solicitud.folio() + ".pdf")
                 .build());
         return new ResponseEntity<>(bytes, headers, HttpStatus.OK);
+    }
+
+    /** IP real si viene de nginx (X-Forwarded-For), si no, la del socket. */
+    private String ipDe(HttpServletRequest request) {
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isBlank()) {
+            return forwarded.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 }
