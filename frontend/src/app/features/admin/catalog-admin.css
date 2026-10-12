@@ -519,6 +519,13 @@
   color: rgba(233, 195, 73, 0.8);
 }
 
+.categorias-fila {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .tarjeta.inactiva .categoria {
   color: #8e9192;
 }

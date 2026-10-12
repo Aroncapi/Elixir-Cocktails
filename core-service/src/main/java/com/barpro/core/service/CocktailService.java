@@ -4,6 +4,7 @@ import com.barpro.core.dto.CocktailRequest;
 import com.barpro.core.dto.CocktailResponse;
 import com.barpro.core.entity.Cocktail;
 import com.barpro.core.entity.CocktailCategory;
+import com.barpro.core.entity.CocktailSpirit;
 import com.barpro.core.entity.EventType;
 import com.barpro.core.error.ConflictException;
 import com.barpro.core.error.NotFoundException;
@@ -35,11 +36,14 @@ public class CocktailService {
         return cocktails.findAll().stream().map(CocktailResponse::from).toList();
     }
 
-    public List<CocktailResponse> searchPublic(String category, String search) {
+    public List<CocktailResponse> searchPublic(String category, String spirit, String search) {
         String needle = search == null ? "" : search.trim().toLowerCase(Locale.ROOT);
         return cocktails.findByActiveTrue().stream()
                 .filter(cocktail -> category == null || category.isBlank()
                         || cocktail.getCategory().name().equalsIgnoreCase(category.trim()))
+                .filter(cocktail -> spirit == null || spirit.isBlank()
+                        || (cocktail.getSpirit() != null
+                            && cocktail.getSpirit().name().equalsIgnoreCase(spirit.trim())))
                 .filter(cocktail -> needle.isEmpty()
                         || cocktail.getName().toLowerCase(Locale.ROOT).contains(needle)
                         || cocktail.getIngredients().toLowerCase(Locale.ROOT).contains(needle))
@@ -86,6 +90,7 @@ public class CocktailService {
     private void apply(Cocktail cocktail, CocktailRequest request) {
         cocktail.setName(request.name().trim());
         cocktail.setCategory(parseCategory(request.category()));
+        cocktail.setSpirit(parseSpirit(request.spirit()));
         cocktail.setIngredients(request.ingredients().trim());
         cocktail.setImageUrl(request.imageUrl());
         cocktail.setActive(request.active() == null || request.active());
@@ -109,6 +114,19 @@ public class CocktailService {
         } catch (Exception ex) {
             throw new IllegalArgumentException(
                     "Categoria invalida: " + raw + " (use SIGNATURE, CLASICOS, CITRICOS o SIN_ALCOHOL)");
+        }
+    }
+
+    private CocktailSpirit parseSpirit(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        try {
+            return CocktailSpirit.valueOf(raw.trim().toUpperCase(Locale.ROOT));
+        } catch (Exception ex) {
+            throw new IllegalArgumentException(
+                    "Destilado invalido: " + raw
+                            + " (use TEQUILA, RON, VODKA, GINEBRA, WHISKY, BRANDY, APERITIVO, SIN_ALCOHOL u OTRO)");
         }
     }
 }

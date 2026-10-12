@@ -32,8 +32,9 @@ public class PublicCatalogController {
     @GetMapping("/cocktails")
     public List<CocktailResponse> cocktails(
             @RequestParam(required = false) String category,
+            @RequestParam(required = false) String spirit,
             @RequestParam(required = false) String search) {
-        return cocktailService.searchPublic(category, search);
+        return cocktailService.searchPublic(category, spirit, search);
     }
 
     @GetMapping("/event-types")

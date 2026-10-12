@@ -277,6 +277,18 @@
                 }
               </div>
             </div>
+            <div>
+              <h3>Destilado</h3>
+              <div class="categorias">
+                @for (dest of destiladosDisponibles; track dest) {
+                  <label class="casilla">
+                    <input type="checkbox" [checked]="destiladoMarcado(dest)"
+                      (change)="alternarDestilado(dest)" />
+                    <span>{{ etiquetasDestilado[dest] }}</span>
+                  </label>
+                }
+              </div>
+            </div>
           </aside>
 
           <section class="catalogo">
@@ -291,34 +303,79 @@
               </div>
             </div>
 
-            <div class="rejilla-cocteles">
-              @for (coctel of visibles(); track coctel.id) {
-                <article class="tarjeta-coctel">
-                  <div class="imagen" [class.sin-imagen]="!coctel.imageUrl"
-                    [style.backgroundImage]="coctel.imageUrl ? 'url(' + coctel.imageUrl + ')' : ''">
-                    @if (!coctel.imageUrl) {
-                      <span class="material-symbols-outlined">local_bar</span>
-                    }
-                  </div>
-                  <div class="cuerpo">
-                    <div class="cabecera">
-                      <h4>{{ coctel.name }}</h4>
-                      <span class="categoria">{{ etiquetaCategoria(coctel.category) }}</span>
+            @if (recomendados().length === 0 && resto().length === 0) {
+              <p class="estado">No hay cócteles que coincidan con los filtros.</p>
+            }
+
+            @if (recomendados().length > 0) {
+              <div class="rejilla-cocteles">
+                @for (coctel of recomendados(); track coctel.id) {
+                  <article class="tarjeta-coctel">
+                    <div class="imagen" [class.sin-imagen]="!coctel.imageUrl"
+                      [style.backgroundImage]="coctel.imageUrl ? 'url(' + coctel.imageUrl + ')' : ''">
+                      @if (!coctel.imageUrl) {
+                        <span class="material-symbols-outlined">local_bar</span>
+                      }
+                      @if (coctel.spirit) {
+                        <span class="destilado">{{ etiquetaDestilado(coctel.spirit) }}</span>
+                      }
                     </div>
-                    <p>{{ coctel.ingredients }}</p>
-                    <button class="btn-add" [class.activo]="seleccionado(coctel.id)" type="button"
-                      (click)="alternarCoctel(coctel.id)">
-                      <span class="material-symbols-outlined">
-                        {{ seleccionado(coctel.id) ? 'check' : 'add' }}
-                      </span>
-                      {{ seleccionado(coctel.id) ? 'Añadido' : 'Añadir' }}
-                    </button>
-                  </div>
-                </article>
-              } @empty {
-                <p class="estado">No hay cócteles que coincidan con los filtros.</p>
-              }
-            </div>
+                    <div class="cuerpo">
+                      <div class="cabecera">
+                        <h4>{{ coctel.name }}</h4>
+                        <span class="categoria">{{ etiquetaCategoria(coctel.category) }}</span>
+                      </div>
+                      <p>{{ coctel.ingredients }}</p>
+                      <button class="btn-add" [class.activo]="seleccionado(coctel.id)" type="button"
+                        (click)="alternarCoctel(coctel.id)">
+                        <span class="material-symbols-outlined">
+                          {{ seleccionado(coctel.id) ? 'check' : 'add' }}
+                        </span>
+                        {{ seleccionado(coctel.id) ? 'Añadido' : 'Añadir' }}
+                      </button>
+                    </div>
+                  </article>
+                }
+              </div>
+            }
+
+            @if (resto().length > 0) {
+              <div class="titulo-seccion">
+                <span class="material-symbols-outlined">expand_more</span>
+                <h3>Más opciones para tu evento</h3>
+                <span class="cantidad">{{ resto().length }}</span>
+              </div>
+
+              <div class="rejilla-cocteles">
+                @for (coctel of resto(); track coctel.id) {
+                  <article class="tarjeta-coctel">
+                    <div class="imagen" [class.sin-imagen]="!coctel.imageUrl"
+                      [style.backgroundImage]="coctel.imageUrl ? 'url(' + coctel.imageUrl + ')' : ''">
+                      @if (!coctel.imageUrl) {
+                        <span class="material-symbols-outlined">local_bar</span>
+                      }
+                      @if (coctel.spirit) {
+                        <span class="destilado">{{ etiquetaDestilado(coctel.spirit) }}</span>
+                      }
+                    </div>
+                    <div class="cuerpo">
+                      <div class="cabecera">
+                        <h4>{{ coctel.name }}</h4>
+                        <span class="categoria">{{ etiquetaCategoria(coctel.category) }}</span>
+                      </div>
+                      <p>{{ coctel.ingredients }}</p>
+                      <button class="btn-add" [class.activo]="seleccionado(coctel.id)" type="button"
+                        (click)="alternarCoctel(coctel.id)">
+                        <span class="material-symbols-outlined">
+                          {{ seleccionado(coctel.id) ? 'check' : 'add' }}
+                        </span>
+                        {{ seleccionado(coctel.id) ? 'Añadido' : 'Añadir' }}
+                      </button>
+                    </div>
+                  </article>
+                }
+              </div>
+            }
 
             @if (validacionPaso2) {
               <p class="validacion">{{ validacionPaso2 }}</p>

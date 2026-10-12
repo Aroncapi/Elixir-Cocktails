@@ -19,6 +19,9 @@
           <div class="encabezado">
             <h2>{{ c.name }}</h2>
             <span class="categoria">{{ c.category }}</span>
+            @if (c.spirit) {
+              <span class="categoria">{{ etiquetaDestilado(c.spirit) }}</span>
+            }
           </div>
           <p class="ingredientes">{{ c.ingredients }}</p>
           <small>Recomendado para {{ c.eventTypes.length }} tipo(s) de evento</small>

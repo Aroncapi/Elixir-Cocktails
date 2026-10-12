@@ -38,6 +38,10 @@ public class Cocktail {
     @Column(nullable = false, length = 30)
     private CocktailCategory category;
 
+    @Enumerated(EnumType.STRING)
+    @Column(length = 30)
+    private CocktailSpirit spirit;
+
     @Column(nullable = false, columnDefinition = "TEXT")
     private String ingredients;
 

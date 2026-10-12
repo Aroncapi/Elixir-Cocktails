@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Cocktail } from '../../core/models/cocktail';
+import { DESTILADOS, ETIQUETAS_DESTILADO } from '../../core/models/spirits';
 import { Desglose, ServiceTier, Solicitud, SolicitudPayload } from '../../core/models/solicitud';
 import { CatalogService } from '../../core/services/catalog';
 import { SettingsService } from '../../core/services/settings';
@@ -77,6 +78,7 @@ export class Quote implements OnInit {
 
   protected readonly busqueda = signal('');
   protected readonly categorias = signal<string[]>([]);
+  protected readonly destilados = signal<string[]>([]);
   protected readonly seleccion = signal<number[]>([]);
 
   protected readonly enviando = signal(false);
@@ -84,6 +86,8 @@ export class Quote implements OnInit {
   protected readonly enlaceCopiado = signal(false);
 
   protected readonly etiquetas = ETIQUETAS_CATEGORIA;
+  protected readonly etiquetasDestilado = ETIQUETAS_DESTILADO;
+  protected readonly destiladosDisponibles = DESTILADOS;
 
   protected eventTypeId: number | null = null;
   protected guests = 50;
@@ -223,22 +227,39 @@ export class Quote implements OnInit {
     return this.tiposEvento().find((t) => t.id === this.eventTypeId);
   }
 
-  protected visibles(): Cocktail[] {
+  /** Aplica todos los filtros del sidebar, sin considerar el tipo de evento. */
+  protected filtrados(): Cocktail[] {
     const texto = this.busqueda().trim().toLowerCase();
     const cats = new Set(this.categorias());
-    const tipoId = this.eventTypeId;
+    const spirts = new Set(this.destilados());
     return this.cocktails().filter((c) => {
       if (!c.active) {
         return false;
       }
-      const coincideTipo = tipoId === null || c.eventTypes.some((t) => t.id === tipoId);
       const coincideTexto =
         texto === '' ||
         c.name.toLowerCase().includes(texto) ||
         c.ingredients.toLowerCase().includes(texto);
       const coincideCategoria = cats.size === 0 || cats.has(c.category);
-      return coincideTipo && coincideTexto && coincideCategoria;
+      const coincideDestilado = spirts.size === 0 || (c.spirit !== null && spirts.has(c.spirit));
+      return coincideTexto && coincideCategoria && coincideDestilado;
     });
+  }
+
+  /** Recomendados para el tipo de evento elegido. */
+  protected recomendados(): Cocktail[] {
+    const tipoId = this.eventTypeId;
+    return this.filtrados().filter(
+      (c) => tipoId === null || c.eventTypes.some((t) => t.id === tipoId),
+    );
+  }
+
+  /** El resto de la carta (lo que no va recomendado para ese evento). */
+  protected resto(): Cocktail[] {
+    const tipoId = this.eventTypeId;
+    return this.filtrados().filter(
+      (c) => tipoId !== null && !c.eventTypes.some((t) => t.id === tipoId),
+    );
   }
 
   protected seleccionados(): Cocktail[] {
@@ -256,6 +277,16 @@ export class Quote implements OnInit {
     return this.categorias().includes(categoria);
   }
 
+  protected alternarDestilado(destilado: string): void {
+    this.destilados.update((actual) =>
+      actual.includes(destilado) ? actual.filter((d) => d !== destilado) : [...actual, destilado],
+    );
+  }
+
+  protected destiladoMarcado(destilado: string): boolean {
+    return this.destilados().includes(destilado);
+  }
+
   protected alternarCoctel(id: number): void {
     this.seleccion.update((actual) =>
       actual.includes(id) ? actual.filter((c) => c !== id) : [...actual, id],
@@ -269,6 +300,13 @@ export class Quote implements OnInit {
 
   protected etiquetaCategoria(categoria: string): string {
     return ETIQUETAS_CATEGORIA[categoria] ?? categoria;
+  }
+
+  protected etiquetaDestilado(destilado: string | null): string {
+    if (!destilado) {
+      return '';
+    }
+    return ETIQUETAS_DESTILADO[destilado] ?? destilado;
   }
 
   protected irAPaso(destino: number): void {
@@ -370,6 +408,7 @@ export class Quote implements OnInit {
     this.paso.set(1);
     this.seleccion.set([]);
     this.categorias.set([]);
+    this.destilados.set([]);
     this.busqueda.set('');
     this.nombre = '';
     this.whatsapp = '';

@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CatalogService } from '../../core/services/catalog';
 import { Cocktail } from '../../core/models/cocktail';
+import { ETIQUETAS_DESTILADO } from '../../core/models/spirits';
 
 @Component({
   imports: [],
@@ -14,6 +15,13 @@ export class Catalog implements OnInit {
   protected readonly cocktails = signal<Cocktail[]>([]);
   protected readonly cargando = signal(true);
   protected readonly error = signal('');
+
+  protected etiquetaDestilado(destilado: string | null): string {
+    if (!destilado) {
+      return '';
+    }
+    return ETIQUETAS_DESTILADO[destilado] ?? destilado;
+  }
 
   ngOnInit(): void {
     this.catalogService.getCocktails().subscribe({

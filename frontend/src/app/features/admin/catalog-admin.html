@@ -134,7 +134,12 @@
             </div>
 
             <div class="tarjeta-cuerpo">
-              <span class="categoria">{{ etiquetaCategoria(c.category) }}</span>
+              <div class="categorias-fila">
+                <span class="categoria">{{ etiquetaCategoria(c.category) }}</span>
+                @if (c.spirit) {
+                  <span class="categoria">{{ etiquetaDestilado(c.spirit) }}</span>
+                }
+              </div>
               <h3>{{ c.name }}</h3>
               <p class="ingredientes">{{ c.ingredients }}</p>
 
@@ -243,6 +248,19 @@
                 <option value="CLASICOS">Clásicos</option>
                 <option value="CITRICOS">Cítricos</option>
                 <option value="SIN_ALCOHOL">Sin Alcohol</option>
+              </select>
+              <span class="material-symbols-outlined flecha">expand_more</span>
+            </div>
+          </div>
+
+          <div class="campo">
+            <label for="c-destilado">Destilado</label>
+            <div class="select">
+              <select id="c-destilado" [(ngModel)]="formulario.spirit">
+                <option value="">Sin destilado</option>
+                @for (dest of destiladosDisponibles; track dest) {
+                  <option [value]="dest">{{ etiquetasDestilado[dest] }}</option>
+                }
               </select>
               <span class="material-symbols-outlined flecha">expand_more</span>
             </div>

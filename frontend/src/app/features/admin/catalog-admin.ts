@@ -2,6 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { Cocktail } from '../../core/models/cocktail';
+import { DESTILADOS, ETIQUETAS_DESTILADO } from '../../core/models/spirits';
 import { AdminCatalogService, CocktailPayload, EventTypeAdmin } from '../../core/services/admin-catalog';
 import { AuthService } from '../../core/services/auth';
 
@@ -40,6 +41,8 @@ export class CatalogAdmin implements OnInit {
   protected readonly editandoId = signal<number | null>(null);
 
   protected readonly etiquetas = ETIQUETAS_CATEGORIA;
+  protected readonly etiquetasDestilado = ETIQUETAS_DESTILADO;
+  protected readonly destiladosDisponibles = DESTILADOS;
 
   protected formulario: CocktailPayload = this.formularioVacio();
   protected activeOriginal = true;
@@ -86,6 +89,13 @@ export class CatalogAdmin implements OnInit {
     return ETIQUETAS_CATEGORIA[categoria] ?? categoria;
   }
 
+  protected etiquetaDestilado(destilado: string | null): string {
+    if (!destilado) {
+      return '';
+    }
+    return ETIQUETAS_DESTILADO[destilado] ?? destilado;
+  }
+
   protected abrirNuevo(): void {
     this.editandoId.set(null);
     this.formulario = this.formularioVacio();
@@ -99,6 +109,7 @@ export class CatalogAdmin implements OnInit {
     this.formulario = {
       name: cocktail.name,
       category: cocktail.category,
+      spirit: cocktail.spirit ?? '',
       ingredients: cocktail.ingredients,
       imageUrl: cocktail.imageUrl,
       active: cocktail.active,
@@ -143,6 +154,7 @@ export class CatalogAdmin implements OnInit {
     const payload: CocktailPayload = {
       ...this.formulario,
       name: nombre,
+      spirit: this.formulario.spirit?.trim() || null,
       ingredients: ingredientes,
       imageUrl: this.formulario.imageUrl?.trim() || null,
       active: this.editandoId() === null ? true : this.formulario.active,
@@ -193,6 +205,7 @@ export class CatalogAdmin implements OnInit {
     const payload: CocktailPayload = {
       name: cocktail.name,
       category: cocktail.category,
+      spirit: cocktail.spirit,
       ingredients: cocktail.ingredients,
       imageUrl: cocktail.imageUrl,
       active: !cocktail.active,
@@ -229,6 +242,7 @@ export class CatalogAdmin implements OnInit {
     return {
       name: '',
       category: '',
+      spirit: '',
       ingredients: '',
       imageUrl: null,
       active: true,
