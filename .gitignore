@@ -39,3 +39,6 @@ Thumbs.db
 
 # Subidas de imagenes (fotos de cocteles; viven en el volumen Docker)
 uploads/
+
+# Respaldos locales (dump .sql + fotos)
+backup/
