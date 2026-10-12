@@ -27,13 +27,17 @@ public class JwtAuthGlobalFilter implements GlobalFilter, Ordered {
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String HEADER_EMAIL = "X-User-Email";
     private static final String HEADER_ROLE = "X-User-Role";
+    static final String HEADER_INTERNAL = "X-Internal-Token";
     private static final List<String> PUBLIC_PATHS = List.of("/api/auth/login", "/error");
     private static final List<String> PUBLIC_PREFIXES = List.of("/api/public/", "/actuator/");
 
     private final SecretKey key;
+    private final String internalToken;
 
-    public JwtAuthGlobalFilter(@Value("${app.jwt.secret}") String secret) {
+    public JwtAuthGlobalFilter(@Value("${app.jwt.secret}") String secret,
+                               @Value("${app.internal.token}") String internalToken) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.internalToken = internalToken;
     }
 
     @Override
@@ -41,10 +45,14 @@ public class JwtAuthGlobalFilter implements GlobalFilter, Ordered {
         ServerHttpRequest request = exchange.getRequest();
         String path = request.getURI().getPath();
 
+        // Limpia cualquier cabecera de identidad/interior enviada por el cliente y
+        // marca la peticion como proveniente del gateway (token interno).
         ServerHttpRequest.Builder sanitized = request.mutate()
                 .headers(headers -> {
                     headers.remove(HEADER_EMAIL);
                     headers.remove(HEADER_ROLE);
+                    headers.remove(HEADER_INTERNAL);
+                    headers.set(HEADER_INTERNAL, internalToken);
                 });
 
         if (isPublic(path)) {

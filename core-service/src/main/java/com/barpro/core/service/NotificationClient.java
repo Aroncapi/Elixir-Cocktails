@@ -23,11 +23,13 @@ public class NotificationClient {
     private final RestClient client;
     private final String publicUrl;
     private final String adminEmail;
+    private final String internalToken;
 
     public NotificationClient(
             @Value("${app.notifications.url:http://localhost:8083/api/notifications}") String url,
             @Value("${app.public-url:http://localhost:4200}") String publicUrl,
-            @Value("${app.admin-email:admin@velvet.mx}") String adminEmail) {
+            @Value("${app.admin-email:admin@velvet.mx}") String adminEmail,
+            @Value("${app.internal.token}") String internalToken) {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(Duration.ofSeconds(2));
         factory.setReadTimeout(Duration.ofSeconds(3));
@@ -37,6 +39,7 @@ public class NotificationClient {
                 .build();
         this.publicUrl = publicUrl;
         this.adminEmail = adminEmail;
+        this.internalToken = internalToken;
     }
 
     public void solicitudCreada(Request solicitud) {
@@ -110,6 +113,7 @@ public class NotificationClient {
     private void enviar(Map<String, Object> payload) {
         try {
             client.post()
+                    .header("X-Internal-Token", internalToken)
                     .body(payload)
                     .retrieve()
                     .toBodilessEntity();
