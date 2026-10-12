@@ -88,7 +88,7 @@
           (ngModelChange)="categoriaFiltro.set($event)"
         >
           <option value="">Todas</option>
-          @for (cat of ['SIGNATURE', 'CLASICOS', 'CITRICOS', 'SIN_ALCOHOL']; track cat) {
+              @for (cat of ['SIGNATURE', 'CLASICOS', 'CITRICOS']; track cat) {
             <option [value]="cat">{{ etiquetaCategoria(cat) }}</option>
           }
         </select>
@@ -247,7 +247,6 @@
                 <option value="SIGNATURE">Signature</option>
                 <option value="CLASICOS">Clásicos</option>
                 <option value="CITRICOS">Cítricos</option>
-                <option value="SIN_ALCOHOL">Sin Alcohol</option>
               </select>
               <span class="material-symbols-outlined flecha">expand_more</span>
             </div>

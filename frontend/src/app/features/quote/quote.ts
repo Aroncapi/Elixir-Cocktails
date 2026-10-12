@@ -21,7 +21,6 @@ const ETIQUETAS_CATEGORIA: Record<string, string> = {
   SIGNATURE: 'Signature',
   CLASICOS: 'Clásicos',
   CITRICOS: 'Cítricos',
-  SIN_ALCOHOL: 'Sin Alcohol',
 };
 
 const MESES = [

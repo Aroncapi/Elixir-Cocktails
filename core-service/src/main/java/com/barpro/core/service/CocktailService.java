@@ -113,7 +113,7 @@ public class CocktailService {
             return CocktailCategory.valueOf(raw.trim().toUpperCase(Locale.ROOT));
         } catch (Exception ex) {
             throw new IllegalArgumentException(
-                    "Categoria invalida: " + raw + " (use SIGNATURE, CLASICOS, CITRICOS o SIN_ALCOHOL)");
+                    "Categoria invalida: " + raw + " (use SIGNATURE, CLASICOS o CITRICOS)");
         }
     }
 

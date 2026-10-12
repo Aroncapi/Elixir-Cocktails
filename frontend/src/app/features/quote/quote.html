@@ -268,7 +268,7 @@
             <div>
               <h3>Categorías</h3>
               <div class="categorias">
-                @for (cat of ['SIGNATURE', 'CLASICOS', 'CITRICOS', 'SIN_ALCOHOL']; track cat) {
+                @for (cat of ['SIGNATURE', 'CLASICOS', 'CITRICOS']; track cat) {
                   <label class="casilla">
                     <input type="checkbox" [checked]="categoriaMarcada(cat)"
                       (change)="alternarCategoria(cat)" />
