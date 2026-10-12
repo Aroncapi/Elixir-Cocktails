@@ -4,13 +4,13 @@ PROYECTO: VELVET & GILT - Plataforma de servicios de mixologia para eventos
 Arquitectura: Microservicios (Spring Cloud) + Angular
 Ubicacion:    C:\Users\AROM\Projects\bar-events
 Nota maestra: LEER ESTA NOTA ANTES DE TOCAR CUALQUIER COSA
-Ultima actualizacion: 11/10/2026 - SESION 9: preparacion para Oracle
-Cloud Free (.env, deploy.sh, MySQL cerrado en 127.0.0.1) -> bloque 0.9.
-Sesion 8: precios en soles (PEN) con equipo automatico por invitados,
-fotos de cocteles y fixes de cache/imagenes/cotizador. Commits 44dcfb9,
-1e9b39f + los de esta sesion.
+Ultima actualizacion: 12/10/2026 - SESION 10: seguridad OWASP (4 criticos +
+medios), destilados en el catalogo y fin de la categoria Sin Alcohol
+-> bloque 0.10.
+Sesion 9: preparacion para Oracle Cloud Free (.env, deploy.sh, MySQL cerrado
+en 127.0.0.1) -> bloque 0.9.
 TODO corre en Docker: http://localhost (frontend + /api via nginx).
-Ver bloque 0.8 (lo ultimo) y 0.7/0.6 para el historial.
+Ver bloque 0.10 (lo ultimo) y 0.9/0.8 para el historial.
 ================================================================================
 
 --------------------------------------------------------------------------------
@@ -923,6 +923,97 @@ NO AFECTA a lo ya hecho:
     SMTP real, WhatsApp automatico.
 
 --------------------------------------------------------------------------------
+0.10 SESION 10 - OWASP (criticos + medios) + DESTILADOS + FIN SIN_ALCOHOL
+--------------------------------------------------------------------------------
+
+COMMITS (push a main; git log 222db00..97a803a):
+  ea83bee  Seguridad CRITICA: INTERNAL_TOKEN obligatorio gateway<->servicios
+           (los servicios solo confian en X-User-* si el token interno
+           coincide; el gateway lo inyecta y borra el del cliente),
+           JWT_SECRET y ADMIN_PASSWORD obligatorios en compose (ya NO arranca
+           sin ellos), AdminBootstrap sin loguear el password, eliminado el
+           "Cuenta demo: admin@... / admin123" del login
+  bda1e7e  Catalogo: destilado (spirit) - filtro lateral, chips en tarjetas,
+           select en admin, migracion V12, ?spirit= en el endpoint publico
+  770d8ff  backup.ps1 (dump de las 3 BD + fotos -> backup/<fecha>) y
+           backup/ en .gitignore (los respaldos NUNCA se suben al repo)
+  222db00  ajuste: spirit en CocktailPayload (servicio admin de Angular)
+  536fb5b  Seguridad MEDIA (ver listado abajo)
+  97a803a  Se elimina la categoria SIN_ALCOHOL: pasa a ser solo un destilado
+           (migracion V13 mueve esos cocteles a SIGNATURE; crear un coctel
+           con esa categoria ahora da 400)
+
+NUEVO EN EL DOMINIO:
+  - Cocktail.spirit (enum CocktailSpirit, nullable): TEQUILA, RON, VODKA,
+    GINEBRA, WHISKY, BRANDY, APERITIVO, SIN_ALCOHOL, OTRO (columna V12).
+    Lista fija COMPARTIDA: frontend/src/app/core/models/spirits.ts tiene que
+    coincidir con el enum de backend (si se agrega uno, agregar en los DOS
+    lados y hacer migracion).
+  - GET /api/public/cocktails acepta ?spirit= ademas de ?category= y ?search=
+  - Cotizador paso 2: DOS secciones - "Recomendados para tu evento" y
+    "Mas opciones para tu evento" (el resto) + filtro lateral de destilado.
+  - Categorias ahora SOLO: SIGNATURE, CLASICOS, CITRICOS.
+  - El panel admin muestra chip de destilado y lo edita en el modal.
+
+SECRETS (todo en .env local, gitignored; los valores tambien estan como
+variables de entorno del USUARIO en la PC para correr mvn/IDE sin Docker):
+  JWT_SECRET, INTERNAL_TOKEN (NUEVO, obligatorio), MYSQL_ROOT_PASSWORD=root,
+  ADMIN_PASSWORD=admin123 (NUEVO; compose lo exige), PUBLIC_URL,
+  CORS_ORIGINS. Ver .env.example con instrucciones.
+
+SEGURIDAD MEDIA APLICADA (536fb5b):
+  - Login: max 5 intentos fallidos por correo cada 15 min -> HTTP 429
+    (LoginRateLimiter en memoria) + hash fantasma para que el tiempo de
+    respuesta sea igual con o sin usuario (sin enumeracion por timing)
+  - POST /api/public/solicitudes: max 3 por IP cada 10 min -> 429
+    (IpRateLimiter; cuenta tambien los intentos fallidos; usa X-Forwarded-For)
+  - Upload /api/files: valida magic bytes (JPEG/PNG/GIF/WEBP) en vez de
+    confiar en el Content-Type del cliente
+  - nginx: X-Content-Type-Options nosniff, X-Frame-Options SAMEORIGIN,
+    Referrer-Policy (repetidos en cada location por la regla de add_header)
+  - Gateway: httpclient connect-timeout=3s, response-timeout=30s
+  - ConsoleNotificationSender: destinatario enmascarado (a***@dominio) y sin
+    cuerpo del mensaje en los logs (sin PII)
+  - Angular: interceptor -> en 401 hace logout y va a /login; el guard
+    considera vencido el JWT (lee exp sin verificar firma)
+
+VERIFICADO EN VIVO (sesion 10, todo por HTTP contra http://localhost):
+  6 login mala pass -> 401 x5 y 429 en el 6to; admin sigue entrando
+  PNG falso como imagen -> 400 "contenido no coincide"; PNG real -> 201
+  4 POST de cotizacion -> 201 x3 y 429 en la 4ta (las 3 de prueba se
+    borraron de la BD al final)
+  headers nginx correctos; V12 y V13 aplicadas; 0 cocteles SIN_ALCOHOL
+
+BACKUPS: .\backup.ps1 -> backup\YYYY-MM-DD_HHMM\ (respaldo.sql con las 3 BD
+  + carpeta uploads). Ultimo de la sesion 10: backup\2026-10-12_0146
+  (17 fotos, 10.1 MB) - copiado por el usuario a su Drive.
+
+TIPS DE LA SESION:
+  - Los builds Docker fallan seguido por red (descargas Maven): REINTENTAR
+    con docker compose up -d --build (2do intento casi siempre pasa).
+  - Si nginx da 502 tras recrear contenedores: docker compose restart
+    frontend (nginx cachea la IP del gateway al arrancar).
+  - Si el puerto 80 deja de responder desde Windows pero el contenedor
+    contesta con curl dentro: es el port-forward de Docker Desktop ->
+    docker compose restart frontend.
+
+PENDIENTES (orden sugerido para la sesion 11):
+  [ ] FASE 7 (nube): VM Oracle sigue sin capacidad (sa-santiago-1, AD-1
+      unico). Script de reintentos activo: tarea Windows "VelvetOciRetry"
+      -> C:\Users\AROM\.oci\launch-retry.ps1 (alterna 4/6 GB, A1 1 OCPU,
+      Ubuntu aarch64), log: C:\Users\AROM\.oci\launch-retry.log.
+      La VCN Velvet-vcn + IGW + subnet velvet-public ya existen; llave SSH:
+      C:\Users\AROM\.ssh\velvet_oci. Cuando salga: SSH, Docker+swap, .env
+      (JWT_SECRET, INTERNAL_TOKEN, ADMIN_PASSWORD FUERTE distinto de
+      admin123, PUBLIC_URL/CORS con la IP publica), abrir 80, ./deploy.sh.
+  [ ] OWASP restantes (bajo impacto): JWT de 24h sin refresh ni revocacion,
+      politica de password (solo largo minimo), IDs/folios secuenciales
+      (el acceso real ya es por token de 128 bits), swagger/eureka abiertos
+      solo en dev LAN (no publicados en compose), healthchecks de los 5
+      servicios en compose, imagenes con tag fijo y USER no-root.
+  [ ] SMTP/WhatsApp real (fase 8) y dominio + HTTPS en la nube.
+
+--------------------------------------------------------------------------------
 1. CONFIGURACION BASE (YA USADA - no repetir)
 --------------------------------------------------------------------------------
 
@@ -1111,13 +1202,16 @@ NO AFECTA a lo ya hecho:
     GET  /api/requests/{id}  |  /{id}/pdf      solo ADMIN
     PUT  /api/requests/{id}/status             solo ADMIN (409 si la
                                                 transicion no esta permitida)
-    POST /api/notifications                    publico (solo via core :8083)
+    POST /api/notifications     solo con X-Internal-Token (gateway/core;
+                                con JWT normal da 403, sin token da 401)
     GET  /api/notifications?status=&type=      solo ADMIN
     PUT  /api/notifications/{id}/reenviar      solo ADMIN
     (GET a las rutas admin requieren header X-User-Role: ADMIN del gateway)
 
   ENTIDADES EN core-service:
-    Cocktail        nombre, categoria, ingredientes, imagen, activo,
+    Cocktail        nombre, categoria (SIGNATURE/CLASICOS/CITRICOS),
+                    destilado spirit opcional (TEQUILA...OTRO, sesion 10),
+                    ingredientes, imagen, activo,
                     tipos de evento recomendados        [creada, con seeds]
     EventType       Bodas, Corporativos, Fiestas Privadas, Masterclass [OK]
     ServiceTier     Servicio Base (precio por persona-hora), Menu Premium
@@ -1209,8 +1303,10 @@ NO AFECTA a lo ya hecho:
   A) PUBLICO (sin login) - Cotizador 3 pasos:
      Paso 1  Tipo de evento (Bodas, Corporativos, Fiestas Privadas,
              Masterclass) + invitados + duracion -> estimacion en tiempo real
-     Paso 2  Catalogo de cocteles (busqueda + categorias: Signature,
-             Clasicos, Citricos, Sin Alcohol) -> "Carta del Evento"
+     Paso 2  Catalogo de cocteles: "Recomendados para tu evento" arriba y
+             "Mas opciones" debajo; filtros por busqueda, categoria
+             (Signature, Clasicos, Citricos) y destilado (sesion 10)
+             -> "Carta del Evento"
      Paso 3  Datos del cliente (nombre, WhatsApp, email, ubicacion,
              notas/alergias) -> resumen + desglose -> confirmar por
              WhatsApp o Email -> folio #REQ-042 + PDF descargable
