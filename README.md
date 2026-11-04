@@ -14,20 +14,30 @@ Plataforma de cotización y gestión de servicios de **mixología para eventos**
 
 ## Arquitectura
 
-```
-Angular 22 (:4200 dev) → gateway-service (:8080)
-                              │
-        ┌─────────────────────┼─────────────────────┐
-        ▼                     ▼                     ▼
-  auth-service          core-service        notification-service
-     (:8081)               (:8082)                (:8083)
-   usuarios/JWT      catálogo, clientes,      notificaciones
-                      solicitudes, PDF,         (consola/SMTP)
-                      calendario
-                              │
-                     eureka-server (:8761)
-                              │
-                     MySQL 8 (auth_db / core_db / notif_db)
+```mermaid
+flowchart LR
+    SPA["Angular 22 SPA<br/>(:4200 dev)"]
+    NGINX["nginx<br/>frontend + /api"]
+    GW["gateway-service :8080<br/>validación JWT + rutas"]
+    AUTH["auth-service :8081<br/>usuarios · login · JWT"]
+    CORE["core-service :8082<br/>catálogo · clientes<br/>solicitudes · PDF · calendario"]
+    NOTIF["notification-service :8083<br/>notificaciones (consola/SMTP)"]
+    EUREKA["eureka-server :8761<br/>descubrimiento"]
+    DB[("MySQL 8<br/>auth_db · core_db · notif_db")]
+
+    SPA -->|HTTP| NGINX -->|"/api"| GW
+    GW -->|"/api/auth/**"| AUTH
+    GW -->|"/api/**"| CORE
+    GW -->|"/api/notificaciones/**"| NOTIF
+
+    AUTH -.->|registro| EUREKA
+    CORE -.->|registro| EUREKA
+    NOTIF -.->|registro| EUREKA
+    GW -.->|descubre| EUREKA
+
+    AUTH --> DB
+    CORE --> DB
+    NOTIF --> DB
 ```
 
 ## Funcionalidades
