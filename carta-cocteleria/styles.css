@@ -1,0 +1,269 @@
+:root {
+  --papel: #f6f1e7;
+  --papel-borde: #e4dcc8;
+  --tinta: #241f18;
+  --tinta-suave: #5c5346;
+  --dorado: #9a7b2f;
+  --dorado-claro: #d4af37;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: #2b2b2b;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  -webkit-font-smoothing: antialiased;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+/* =========================================================
+   HOJA A4 (210 x 297 mm) — idéntica en pantalla y en PDF
+   ========================================================= */
+.hoja {
+  position: relative;
+  width: 210mm;
+  height: 297mm;
+  margin: 20px auto;
+  padding: 13mm 14mm 12mm;
+  background: var(--papel);
+  color: var(--tinta);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+}
+
+/* Marco fino tipo menú impreso */
+.hoja::before {
+  content: '';
+  position: absolute;
+  inset: 6mm;
+  border: 0.4mm solid rgba(154, 123, 47, 0.45);
+  pointer-events: none;
+}
+
+.cuerpo {
+  flex: 1;
+  min-height: 0;
+}
+
+/* ---------- Portada (hoja 1) ---------- */
+.portada {
+  text-align: center;
+  padding: 4mm 0 6mm;
+  margin-bottom: 5mm;
+  border-bottom: 0.3mm solid rgba(154, 123, 47, 0.5);
+}
+
+.sobretitulo {
+  margin: 0 0 2.5mm;
+  font-size: 7.5pt;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--tinta-suave);
+}
+
+.marca {
+  margin: 0;
+  font-family: 'Playfair Display', serif;
+  font-size: 30pt;
+  font-weight: 600;
+  line-height: 1.05;
+  color: var(--dorado);
+}
+
+.ornamento {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3mm;
+  margin: 3mm auto;
+  max-width: 70mm;
+}
+
+.ornamento .linea {
+  flex: 1;
+  height: 0.3mm;
+  background: linear-gradient(to right, transparent, var(--dorado), transparent);
+}
+
+.ornamento .diamante {
+  color: var(--dorado);
+  font-size: 8pt;
+  line-height: 1;
+}
+
+.titulo-presentacion {
+  margin: 0;
+  font-family: 'Playfair Display', serif;
+  font-size: 14pt;
+  font-style: italic;
+  color: var(--tinta);
+}
+
+/* ---------- Grupos de categoría ---------- */
+.grupo {
+  display: flex;
+  align-items: center;
+  gap: 3mm;
+  margin: 0 0 3.5mm;
+}
+
+.grupo h2 {
+  margin: 0;
+  font-family: 'Playfair Display', serif;
+  font-size: 11.5pt;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dorado);
+  white-space: nowrap;
+}
+
+.grupo h2 em {
+  font-size: 8pt;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: none;
+}
+
+.grupo .linea {
+  flex: 1;
+  height: 0.3mm;
+  background: linear-gradient(to right, rgba(154, 123, 47, 0.7), transparent);
+}
+
+.grupo + .rejilla {
+  margin-bottom: 5mm;
+}
+
+/* ---------- Rejilla de tarjetas (3 columnas) ---------- */
+.rejilla {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4.5mm;
+}
+
+.tarjeta {
+  display: flex;
+  flex-direction: column;
+  background: #fffdf8;
+  border: 0.3mm solid var(--papel-borde);
+  break-inside: avoid;
+}
+
+.foto {
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: #ddd6c5;
+}
+
+.foto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.detalle {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2mm;
+  padding: 2.8mm 3mm 3.2mm;
+  flex: 1;
+}
+
+.destilado {
+  align-self: flex-start;
+  font-size: 5.5pt;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dorado);
+  border: 0.25mm solid rgba(154, 123, 47, 0.6);
+  padding: 0.6mm 1.6mm;
+}
+
+.detalle h3 {
+  margin: 0.6mm 0 0;
+  font-family: 'Playfair Display', serif;
+  font-size: 10.5pt;
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--tinta);
+}
+
+.ingredientes {
+  margin: 0;
+  font-size: 7pt;
+  line-height: 1.45;
+  font-style: italic;
+  color: var(--tinta-suave);
+}
+
+/* ---------- Cierre (hoja 3) ---------- */
+.cierre {
+  margin-top: 8mm;
+  text-align: center;
+}
+
+.nota-cierre {
+  margin: 0;
+  font-size: 7.5pt;
+  letter-spacing: 0.06em;
+  color: var(--tinta-suave);
+}
+
+/* ---------- Pie de cada hoja ---------- */
+.pie-hoja {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4mm;
+  padding-top: 2.5mm;
+  border-top: 0.3mm solid rgba(154, 123, 47, 0.5);
+  font-size: 6.5pt;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tinta-suave);
+}
+
+/* =========================================================
+   IMPRESIÓN / GUARDAR COMO PDF (Ctrl+P → Guardar como PDF)
+   ========================================================= */
+@page {
+  size: A4 portrait;
+  margin: 0;
+}
+
+@media print {
+  body {
+    background: none;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .hoja {
+    margin: 0;
+    box-shadow: none;
+    page-break-after: always;
+  }
+
+  .hoja:last-child {
+    page-break-after: auto;
+  }
+}
